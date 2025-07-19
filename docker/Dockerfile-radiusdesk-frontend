@@ -1,0 +1,65 @@
+FROM docker.io/gkelle/radiusdesk-php:8.3
+    ARG RADIUS_TAR=/var/www/rdcore/cake4/rd_cake/setup/radius/freeradius.dec.24.tar.gz
+    ARG MAINLINE_GIT_VERSION_HASH=unspecified
+    ARG GIT_VERSION_HASH=unspecified
+
+    RUN apt-get update && apt-get --no-install-recommends -y install language-pack-en-base nginx patch supervisor subversion freeradius freeradius-utils eapoltest && rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
+
+    COPY ./default /etc/nginx/sites-enabled/
+    COPY --exclude=./rdcore/.git --exclude=./rdcore/docker ./rdcore /var/www/rdcore
+    COPY ./php.ini /etc/php/php.ini
+    COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+    RUN mkdir -p /var/www/html && \
+        ln -s /var/www/rdcore/rd /var/www/html/rd && \
+        ln -s /var/www/rdcore/cake4 /var/www/html/cake4 && \
+        ln -s /var/www/rdcore/cake4 /var/www/html/cake3 && \
+        ln -s /var/www/rdcore/login /var/www/html/login && \
+        ln -s /var/www/rdcore/AmpConf/build/production/AmpConf /var/www/html/conf_dev && \
+        ln -s /var/www/rdcore/login/rd_client/build/production/AmpConf /var/www/html/usage && \
+        ln -s /var/www/rdcore/cake4/rd_cake/setup/scripts/reporting /var/www/html/reporting && \
+        mkdir -p /var/www/html/cake4/rd_cake/logs && \
+        mkdir -p /var/www/html/cake4/rd_cake/webroot/files/imagecache && \
+        mkdir -p /var/www/html/cake4/rd_cake/tmp && \
+        chown -R www-data. /var/www/html/cake4/rd_cake/tmp && \
+        chown -R www-data. /var/www/html/cake4/rd_cake/logs && \
+        chown -R www-data. /var/www/html/cake4/rd_cake/webroot/img/realms && \
+        chown -R www-data. /var/www/html/cake4/rd_cake/webroot/img/dynamic_details && \
+        chown -R www-data. /var/www/html/cake4/rd_cake/webroot/img/dynamic_photos && \
+        chown -R www-data. /var/www/html/cake4/rd_cake/webroot/img/access_providers && \
+        chown -R www-data. /var/www/html/cake4/rd_cake/webroot/img/hardwares && \
+        chown -R www-data. /var/www/html/cake4/rd_cake/webroot/files/imagecache && \
+        cp /var/www/html/cake4/rd_cake/setup/cron/cron4 /etc/cron.d/ && \
+        chmod 0644 /etc/cron.d/cron4 && \
+        crontab /etc/cron.d/cron4 && \
+        mkdir -p /var/log/php-fpm && \
+        ln -s /var/www/rdcore/cake4/rd_cake/logs/ /var/log/rd_cake && \
+        rm -fr /etc/freeradius/3.0 && \
+        tar zxvf ${RADIUS_TAR} -C /etc  && \
+        chmod o+x /etc/freeradius/ && \
+        chmod o+r /etc/freeradius/3.0/dictionary
+    
+    # Copy files from production to root www
+    RUN cp -R /var/www/html/rd/build/production/Rd/* /var/www/html/
+
+    COPY ./patches/frontend /var/www/patches
+    RUN find /var/www/patches -type f -print0 | xargs -0 -n 1 patch -p1 -d /var/www/rdcore -i
+
+    # entrypoint run script when container starts - ignores what is in command
+    ENTRYPOINT /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+
+    RUN echo $GIT_VERSION_HASH > /GIT_VERSION_HASH.txt && echo $MAINLINE_GIT_VERSION_HASH > /MAINLINE_GIT_VERSION_HASH.txt
+
+    # Only expose radiusdesk web front end to Teaefik and Freeradius UDP ports that bypass traefik
+    EXPOSE 80/tcp
+
+    ENV PHP_INI_SCAN_DIR=:/p/gd:/p/pdo_sqlite
+    ENV PHP.cgi.fix_pathinfo=1
+    ENV PHP_SELF=/index.php
+    ENV RD_DB_SERVER=mariadb
+    ENV RD_DB_USERNAME=rd
+    ENV RD_DB_PASSWORD=rd
+    ENV RD_DB_NAME=rd
+    ENV RD_MQTT_SETTINGS_ENABLE_REALTIME=false
+    ENV RD_MQTT_SETTINGS_API_GATEWAY_URL=http://127.0.0.1:8001
+    ENV RD_RADIUS_SECRET=testing123

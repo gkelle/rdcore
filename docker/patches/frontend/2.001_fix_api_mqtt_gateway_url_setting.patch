@@ -1,0 +1,21 @@
+--- a/cake4/rd_cake/src/Controller/ApActionsController.php	2025-07-08 22:01:05.200050315 -0700
++++ b/cake4/rd_cake/src/Controller/ApActionsController.php	2025-07-08 22:04:41.764772697 -0700
+@@ -110,7 +110,7 @@
+         $cfg['api_mqtt_enabled'] = false;
+         $cfg['api_gateway_url'] = 'http://127.0.0.1:8001';
+         
+-        $want_these = ['api_mqtt_enabled','api_gateway_url'];
++        $want_these = ['api_mqtt_enabled','api_mqtt_gateway_url'];
+ 		$ent_us     = $this->UserSettings->find()->where(['UserSettings.user_id' => -1])->all();
+ 	
+ 		foreach($ent_us as $s){
+@@ -120,7 +120,8 @@
+ 		        $cfg["$s_name"] = $s_value;
+ 		    }
+ 		}
+-              
++
++        $cfg['api_gateway_url'] = $cfg['api_mqtt_gateway_url'];      
+         $client	= new Client();
+         $req_d  = $this->request->getData();
+ 
