@@ -1,0 +1,129 @@
+--- a/clients.conf	2024-12-15 23:51:06.000000000 -0800
++++ b/clients.conf	2025-07-18 19:02:48.727245369 -0700
+@@ -132,7 +132,7 @@
+ 	#  The default secret below is only for testing, and should
+ 	#  not be used in any real environment.
+ 	#
+-	secret = testing123
++	secret = $ENV{RD_RADIUS_SECRET}
+ 
+ 	#
+ 	#  The global configuration "security.require_message_authenticator"
+@@ -284,7 +284,7 @@
+ # IPv6 Client
+ client localhost_ipv6 {
+ 	ipv6addr	= ::1
+-	secret		= testing123
++	secret		= $ENV{RD_RADIUS_SECRET}
+ }
+ 
+ # All IPv6 Site-local clients
+--- a/proxy.conf	2024-09-12 11:22:30.000000000 -0700
++++ b/proxy.conf	2025-07-18 18:56:47.667920105 -0700
+@@ -250,7 +250,7 @@
+ 	#	e.g. "foo bar"
+ 	#	     "foo;bar"
+ 	#
+-	secret = testing123
++	secret = $ENV{RD_RADIUS_SECRET}
+ 
+ 	#
+ 	#  The global configuration "security.require_message_authenticator"
+--- a/mods-available/sql	2024-12-16 01:25:31.000000000 -0800
++++ b/mods-available/sql	2025-07-18 19:01:31.817527901 -0700
+@@ -164,10 +164,10 @@
+ 
+ 	# Connection info:
+ 	#
+-	server = "localhost"
++	server = $ENV{RD_DB_SERVER}
+ #	port = 3306
+-	login = "rd"
+-	password = "rd"
++	login = $ENV{RD_DB_USERNAME}
++	password = $ENV{RD_DB_PASSWORD}
+ 
+ 	# Connection info for Mongo
+ 	# Authentication Without SSL
+@@ -182,7 +182,7 @@
+ 	# server = mongodb://<DERIVED USERNAME>@192.168.0.2:PORT/DATABASE?authSource=$external&ssl=true&authMechanism=MONGODB-X509
+ 
+ 	# Database table configuration for everything except Oracle
+-	radius_db = "rd"
++	radius_db = $ENV{RD_DB_NAME}
+ 
+ 	# If you are using Oracle then use this instead
+ #	radius_db = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SID=your_sid)))"
+--- a/mods-config/perl/auto_add_dynamic_client.pl	2024-12-16 04:09:47.000000000 -0800
++++ b/mods-config/perl/auto_add_dynamic_client.pl	2025-07-18 18:57:57.950532789 -0700
+@@ -75,18 +75,18 @@
+ use constant    RAD_LOG_INFO=>   3; 
+ use constant    RAD_LOG_ERROR=>  4; 
+ 
+-my $enabled    = 1;  #Make this 0 to enable it. 
+-my $cloud_id   = 23; #Heads-up Here we specify the cloud ID that the DynamicClient has to belong to //select * from clouds to select//
+-my $timezone   = 24; #//select * from timezones to select//
++my $enabled    = $ENV{RD_DYNAMIC_CLIENT_AUTO_ADD_ENABLED} || 1;  #Make this 0 to enable it. 
++my $cloud_id   = $ENV{RD_DYNAMIC_CLIENT_AUTO_ADD_CLOUD_ID} || 23; #Heads-up Here we specify the cloud ID that the DynamicClient has to belong to //select * from clouds to select//
++my $timezone   = $ENV{RD_DYNAMIC_CLIENT_AUTO_ADD_TIMEZONE} || 24; #//select * from timezones to select//
+ 
+ 
+ 
+ #___ RADIUSdesk _______
+ sub read_conf {
+-   $conf{'db_name'}     = "rd";
+-   $conf{'db_host'}     = "127.0.0.1";
+-   $conf{'db_user'}     = "rd";
+-   $conf{'db_passwd'}   = "rd";
++   $conf{'db_name'}     = $ENV{RD_DB_NAME} || "rd";
++   $conf{'db_host'}     = $ENV{RD_DB_SERVER} || "rdmariadb";
++   $conf{'db_user'}     = $ENV{RD_DB_USERNAME} || "rd";
++   $conf{'db_passwd'}   = $ENV{RD_DB_PASSWORD} || "rd";
+ }
+ 
+ sub conn_db {
+--- a/sites-available/dynamic-clients	2024-12-16 00:55:40.000000000 -0800
++++ b/sites-available/dynamic-clients	2025-07-18 18:57:13.141114778 -0700
+@@ -115,7 +115,7 @@
+ 			&FreeRADIUS-Client-Require-MA = no
+ 
+ 			# secret
+-			&FreeRADIUS-Client-Secret = "testing123"
++			&FreeRADIUS-Client-Secret = $ENV{RD_RADIUS_SECRET}
+ 
+ 			# shortname
+ 			&FreeRADIUS-Client-Shortname = "%{Packet-Src-IP-Address}"
+--- a/mods-config/perl/inner_tunnel.pl	2024-12-16 04:11:19.000000000 -0800
++++ b/mods-config/perl/inner_tunnel.pl	2025-07-18 18:58:44.711969015 -0700
+@@ -78,10 +78,10 @@
+ 
+ #___ RADIUSdesk _______
+ sub read_conf {
+-   $conf{'db_name'}     = "rd";
+-   $conf{'db_host'}     = "127.0.0.1";
+-   $conf{'db_user'}     = "rd";
+-   $conf{'db_passwd'}   = "rd";
++   $conf{'db_name'}     = $ENV{RD_DB_NAME} || "rd";
++   $conf{'db_host'}     = $ENV{RD_DB_SERVER} || "rdmariadb";
++   $conf{'db_user'}     = $ENV{RD_DB_USERNAME} || "rd";
++   $conf{'db_passwd'}   = $ENV{RD_DB_PASSWORD} || "rd";
+ }
+ 
+ sub conn_db {
+--- a/mods-config/perl/fup.pl	2024-12-16 09:20:14.000000000 -0800
++++ b/mods-config/perl/fup.pl	2025-07-18 18:59:13.921241505 -0700
+@@ -68,10 +68,10 @@
+ 
+ #___ RADIUSdesk _______
+ sub read_conf {
+-   $conf{'db_name'}     = "rd";
+-   $conf{'db_host'}     = "127.0.0.1";
+-   $conf{'db_user'}     = "rd";
+-   $conf{'db_passwd'}   = "rd";
++   $conf{'db_name'}     = $ENV{RD_DB_NAME} || "rd";
++   $conf{'db_host'}     = $ENV{RD_DB_SERVER} || "rdmariadb";
++   $conf{'db_user'}     = $ENV{RD_DB_USERNAME} || "rd";
++   $conf{'db_passwd'}   = $ENV{RD_DB_PASSWORD} || "rd";
+ }
+ 
+ sub conn_db {

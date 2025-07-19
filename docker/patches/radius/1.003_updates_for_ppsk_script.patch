@@ -1,0 +1,41 @@
+--- a/mods-config/perl/ppsk.pl	2024-12-16 04:09:34.000000000 -0800
++++ b/mods-config/perl/ppsk.pl	2025-07-18 16:13:46.686839299 -0700
+@@ -89,10 +89,10 @@
+ 
+ #___ RADIUSdesk _______
+ sub read_conf {
+-   $conf{'db_name'}     = "rd";
+-   $conf{'db_host'}     = "127.0.0.1";
+-   $conf{'db_user'}     = "rd";
+-   $conf{'db_passwd'}   = "rd";
++   $conf{'db_name'}     = $ENV{RD_DB_NAME} || "rd";
++   $conf{'db_host'}     = $ENV{RD_DB_SERVER} || "rdmariadb";
++   $conf{'db_user'}     = $ENV{RD_DB_USERNAME} || "rd";
++   $conf{'db_passwd'}   = $ENV{RD_DB_PASSWORD} || "rd";
+ }
+ 
+ sub conn_db {
+@@ -268,9 +268,10 @@
+     my $FR_EAPoL_Key_Msg='';
+     my $FR_Calling_Station='';
+ 
+-    if(($RAD_REQUEST{'Attr-245.26.11344.1'})&&($RAD_REQUEST{'Attr-245.26.11344.2'})){    
+-        $FR_Anonce           = $RAD_REQUEST{'Attr-245.26.11344.1'};
+-        $FR_EAPoL_Key_Msg    = $RAD_REQUEST{'Attr-245.26.11344.2'};
++
++    if(($RAD_REQUEST{'Attr-245.26.11344.1'}||$RAD_REQUEST{'FreeRADIUS-802.1X-Anonce'})&&($RAD_REQUEST{'Attr-245.26.11344.2'}||$RAD_REQUEST{'FreeRADIUS-802.1X-EAPoL-Key-Msg'})){
++        $FR_Anonce           = $RAD_REQUEST{'Attr-245.26.11344.1'} || $RAD_REQUEST{'FreeRADIUS-802.1X-Anonce'};
++        $FR_EAPoL_Key_Msg    = $RAD_REQUEST{'Attr-245.26.11344.2'} || $RAD_REQUEST{'FreeRADIUS-802.1X-EAPoL-Key-Msg'};
+ 	    $FR_Calling_Station  = $RAD_REQUEST{'Calling-Station-Id'};
+ 		$FR_Anonce              =~ s/^0x//i;
+ 		$FR_EAPoL_Key_Msg       =~ s/^0x//i;   
+@@ -305,6 +306,9 @@
+     if(defined $RAD_REQUEST{'NAS-Identifier'} && length $RAD_REQUEST{'NAS-Identifier'} > 0) {
+     
+         my $realm_id = 0;
++        if ( ! $dbh->ping ) {
++            CLONE();
++        }
+         $stmt_realm_id->execute($RAD_REQUEST{'NAS-Identifier'});     
+         while(my $row = $stmt_realm_id->fetchrow_hashref()){        
+             $realm_id = $row->{'id'};

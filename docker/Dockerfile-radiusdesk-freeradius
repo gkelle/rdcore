@@ -1,0 +1,52 @@
+ARG RADIUS_VERSION=3.2.7
+
+FROM freeradius/freeradius-server:${RADIUS_VERSION}
+
+ARG RADIUSDESK_FREERADIUS_TAR_URL=https://github.com/RADIUSdesk/rdcore/raw/913e00f7a8438251b942c768c093a13d2331f17b/cake4/rd_cake/setup/radius/freeradius.dec.24.tar.gz
+
+RUN <<EOF
+rm -fr /etc/freeradius
+mkdir /etc/freeradius
+chown freerad: /etc/freeradius
+chmod 2751 /etc/freeradius
+apt-get update
+apt-get install --no-install-recommends -y \
+              libdatetime-perl \
+              libdigest-hmac-perl \
+              libcrypt-pbkdf2-perl \
+              libcrypt-rijndael-perl \
+              libmath-round-perl \
+              curl \
+              patch
+curl -L ${RADIUSDESK_FREERADIUS_TAR_URL} | tar zxvf - -C /etc/freeradius/ freeradius/3.0  --strip-components=2
+apt-get remove -y curl
+rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
+PERL_MM_USE_DEFAULT=1 cpan install Digest/CMAC.pm
+rm -fr /root/.cpan/
+rm /tmp/cpan*
+EOF
+
+COPY patches/radius/ /etc/freeradius/patches
+COPY scripts/radius/ppsk_ft.pl /etc/freeradius/mods-config/perl/ppsk_ft.pl
+
+RUN <<EOF
+find /etc/freeradius/patches -type f -print0 | xargs -0 -n 1 patch -p1 -d /etc/freeradius -i
+ln -sf ../mods-available/pl_ppsk_ft /etc/freeradius/mods-enabled/pl_ppsk_ft
+sed -i 's;/etc/freeradius/3.0;/etc/freeradius;' /etc/freeradius/dictionary /etc/freeradius/radiusd.conf
+touch /etc/freeradius/mods-available/pl_ppsk_ft
+chown freerad: /etc/freeradius/mods-available/pl_ppsk_ft /etc/freeradius/mods-config/perl/ppsk_ft.pl
+cat <<-'INNEREOF' > /etc/freeradius/mods-available/pl_ppsk_ft
+	perl pl_ppsk_ft {
+	        filename = ${modconfdir}/perl/ppsk_ft.pl
+	}
+	INNEREOF
+EOF
+
+ENV RD_RADIUS_SECRET="testing123"
+ENV RD_DB_SERVER="rdmariadb"
+ENV RD_DB_USERNAME="rd"
+ENV RD_DB_PASSWORD="rd"
+ENV RD_DB_NAME="rd"
+ENV RD_DYNAMIC_CLIENT_AUTO_ADD_ENABLED=1
+ENV RD_DYNAMIC_CLIENT_AUTO_ADD_CLOUD_ID=23
+ENV RD_DYNAMIC_CLIENT_AUTO_ADD_TIMEZONE=24
