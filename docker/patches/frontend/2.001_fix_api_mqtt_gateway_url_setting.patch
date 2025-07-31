@@ -1,5 +1,5 @@
---- a/cake4/rd_cake/src/Controller/ApActionsController.php	2025-07-08 22:01:05.200050315 -0700
-+++ b/cake4/rd_cake/src/Controller/ApActionsController.php	2025-07-08 22:04:41.764772697 -0700
+--- a/var/www/rdcore/cake4/rd_cake/src/Controller/ApActionsController.php	2025-07-08 22:01:05.200050315 -0700
++++ b/var/www/rdcore/cake4/rd_cake/src/Controller/ApActionsController.php	2025-07-08 22:04:41.764772697 -0700
 @@ -110,7 +110,7 @@
          $cfg['api_mqtt_enabled'] = false;
          $cfg['api_gateway_url'] = 'http://127.0.0.1:8001';

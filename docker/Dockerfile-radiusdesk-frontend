@@ -43,7 +43,7 @@ FROM docker.io/gkelle/radiusdesk-php:8.3
     RUN cp -R /var/www/html/rd/build/production/Rd/* /var/www/html/
 
     COPY ./patches/frontend /var/www/patches
-    RUN find /var/www/patches -type f -print0 | xargs -0 -n 1 patch -p1 -d /var/www/rdcore -i
+    RUN find /var/www/patches -type f -print0 | xargs -0 -n 1 patch -p1 -d / -i
 
     # entrypoint run script when container starts - ignores what is in command
     ENTRYPOINT /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

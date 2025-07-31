@@ -1,7 +1,5 @@
-diff --git a/cake4/rd_cake/src/Application.php b/cake4/rd_cake/src/Application.php
-index d3262213..e9522748 100644
---- a/cake4/rd_cake/src/Application.php
-+++ b/cake4/rd_cake/src/Application.php
+--- a/var/www/rdcore/cake4/rd_cake/src/Application.php
++++ b/var/www/rdcore/cake4/rd_cake/src/Application.php
 @@ -80,7 +80,6 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
           * Debug Kit should not be installed on a production system
           */

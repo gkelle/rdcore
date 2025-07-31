@@ -1,7 +1,5 @@
-diff --git a/cake4/rd_cake/config/MESHdesk.php b/cake4/rd_cake/config/MESHdesk.php
-index 41b2044f..bebc5c60 100644
---- a/cake4/rd_cake/config/MESHdesk.php
-+++ b/cake4/rd_cake/config/MESHdesk.php
+--- a/var/www/rdcore/cake4/rd_cake/config/MESHdesk.php
++++ b/var/www/rdcore/cake4/rd_cake/config/MESHdesk.php
 @@ -106,8 +106,8 @@ $config['common_node_settings']['report_adv_full']	        = 600;
  $config['common_node_settings']['report_adv_sampling']	    = 60;
   
@@ -13,10 +11,8 @@ index 41b2044f..bebc5c60 100644
  
  //== MESHdesk SSID/BSSID
  $config['MESHdesk']['bssid'] = "02:CA:FE:CA:00:00"; //This will be the first one; subsequent ones will be incremented 
-diff --git a/cake4/rd_cake/config/RadiusDesk.php b/cake4/rd_cake/config/RadiusDesk.php
-index 95a32bda..9abe8073 100644
---- a/cake4/rd_cake/config/RadiusDesk.php
-+++ b/cake4/rd_cake/config/RadiusDesk.php
+--- a/var/www/rdcore/cake4/rd_cake/config/RadiusDesk.php
++++ b/var/www/rdcore/cake4/rd_cake/config/RadiusDesk.php
 @@ -217,7 +217,7 @@ TIP: Also remember to change the values in:
  ApProfiles.php
  MESHdesk.php
@@ -26,10 +22,8 @@ index 95a32bda..9abe8073 100644
  
  //=== EXPERIMENTAL STUFF =====
  //--Show experimental menus---
-diff --git a/cake4/rd_cake/config/app_local.php b/cake4/rd_cake/config/app_local.php
-index e27e9338..bc091524 100644
---- a/cake4/rd_cake/config/app_local.php
-+++ b/cake4/rd_cake/config/app_local.php
+--- a/var/www/rdcore/cake4/rd_cake/config/app_local.php
++++ b/var/www/rdcore/cake4/rd_cake/config/app_local.php
 @@ -40,13 +40,13 @@ return [
       */
      'Datasources' => [
@@ -75,10 +69,8 @@ index e27e9338..bc091524 100644
              'port' => 25,
              'username' => null,
              'password' => null,
-diff --git a/cake4/rd_cake/setup/scripts/reporting/flows_wip.php b/cake4/rd_cake/setup/scripts/reporting/flows_wip.php
-index edc2d244..edee7621 100644
---- a/cake4/rd_cake/setup/scripts/reporting/flows_wip.php
-+++ b/cake4/rd_cake/setup/scripts/reporting/flows_wip.php
+--- a/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/flows_wip.php
++++ b/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/flows_wip.php
 @@ -1,8 +1,9 @@
  <?php
  //Some global variables
@@ -104,10 +96,8 @@ index edc2d244..edee7621 100644
          $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
      }
      catch(PDOException $e){
-diff --git a/cake4/rd_cake/setup/scripts/reporting/process_flows.php b/cake4/rd_cake/setup/scripts/reporting/process_flows.php
-index a1f5474d..17ff94d6 100644
---- a/cake4/rd_cake/setup/scripts/reporting/process_flows.php
-+++ b/cake4/rd_cake/setup/scripts/reporting/process_flows.php
+--- a/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/process_flows.php
++++ b/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/process_flows.php
 @@ -2,9 +2,10 @@
  
  
@@ -134,10 +124,8 @@ index a1f5474d..17ff94d6 100644
          $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
      }
      catch(PDOException $e){
-diff --git a/cake4/rd_cake/setup/scripts/reporting/process_report.php b/cake4/rd_cake/setup/scripts/reporting/process_report.php
-index 94aab3e1..38d19dac 100644
---- a/cake4/rd_cake/setup/scripts/reporting/process_report.php
-+++ b/cake4/rd_cake/setup/scripts/reporting/process_report.php
+--- a/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/process_report.php
++++ b/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/process_report.php
 @@ -6,9 +6,10 @@
  
  
@@ -173,10 +161,8 @@ index 94aab3e1..38d19dac 100644
          $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);   
          $conn->setAttribute( PDO::ATTR_EMULATE_PREPARES, false );
      }
-diff --git a/cake4/rd_cake/setup/scripts/reporting/reporting.php b/cake4/rd_cake/setup/scripts/reporting/reporting.php
-index f3782ab6..4c835eaf 100644
---- a/cake4/rd_cake/setup/scripts/reporting/reporting.php
-+++ b/cake4/rd_cake/setup/scripts/reporting/reporting.php
+--- a/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/reporting.php
++++ b/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/reporting.php
 @@ -1,8 +1,9 @@
  <?php
  //Some global variables
@@ -211,10 +197,8 @@ index f3782ab6..4c835eaf 100644
          $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
      }
      catch(PDOException $e){
-diff --git a/cake4/rd_cake/setup/scripts/reporting/reporting_no_qmi.php b/cake4/rd_cake/setup/scripts/reporting/reporting_no_qmi.php
-index 850cfafd..83d0a5c7 100644
---- a/cake4/rd_cake/setup/scripts/reporting/reporting_no_qmi.php
-+++ b/cake4/rd_cake/setup/scripts/reporting/reporting_no_qmi.php
+--- a/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/reporting_no_qmi.php
++++ b/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/reporting_no_qmi.php
 @@ -1,8 +1,9 @@
  <?php
  //Some global variables
@@ -240,10 +224,8 @@ index 850cfafd..83d0a5c7 100644
          $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
      }
      catch(PDOException $e){
-diff --git a/cake4/rd_cake/setup/scripts/reporting/reporting_wip.php b/cake4/rd_cake/setup/scripts/reporting/reporting_wip.php
-index a9444422..7f1af40c 100644
---- a/cake4/rd_cake/setup/scripts/reporting/reporting_wip.php
-+++ b/cake4/rd_cake/setup/scripts/reporting/reporting_wip.php
+--- a/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/reporting_wip.php
++++ b/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/reporting_wip.php
 @@ -1,8 +1,9 @@
  <?php
  //Some global variables
@@ -269,10 +251,8 @@ index a9444422..7f1af40c 100644
          $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
      }
      catch(PDOException $e){
-diff --git a/cake4/rd_cake/setup/scripts/reporting/send_remote_syslog.php b/cake4/rd_cake/setup/scripts/reporting/send_remote_syslog.php
-index a6e47c4c..3308183b 100644
---- a/cake4/rd_cake/setup/scripts/reporting/send_remote_syslog.php
-+++ b/cake4/rd_cake/setup/scripts/reporting/send_remote_syslog.php
+--- a/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/send_remote_syslog.php
++++ b/var/www/rdcore/cake4/rd_cake/setup/scripts/reporting/send_remote_syslog.php
 @@ -2,9 +2,10 @@
  
  
