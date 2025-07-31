@@ -1,6 +1,6 @@
 ARG RADIUS_VERSION=3.2.7
 
-FROM freeradius/freeradius-server:${RADIUS_VERSION}
+FROM gkelle/freeradius-server:${RADIUS_VERSION}
 
 ARG RADIUSDESK_FREERADIUS_TAR_URL=https://github.com/RADIUSdesk/rdcore/raw/913e00f7a8438251b942c768c093a13d2331f17b/cake4/rd_cake/setup/radius/freeradius.dec.24.tar.gz
 
