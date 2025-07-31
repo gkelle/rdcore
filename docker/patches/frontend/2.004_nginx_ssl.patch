@@ -1,0 +1,63 @@
+--- a/etc/supervisor/conf.d/supervisord.conf	2025-07-30 17:26:05.464255652 -0700
++++ b/etc/supervisor/conf.d/supervisord.conf	2025-07-30 17:25:13.622737213 -0700
+@@ -8,9 +8,18 @@
+ minfds=1024                  ; (min. avail startup file descriptors;default 1024)
+ minprocs=200                 ; (min. avail process descriptors;default 200)
+ user=root         
++
++[program:nginx-ssl]
++command=sh -c 'mkdir -p /etc/nginx/ssl && ls /etc/nginx/ssl/nginx.crt >/dev/null 2>&1 || openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt -subj "/C=US/O=RADIUSdesk/CN=radiusdesk.controller"'
++autostart=true
++startretries=0
++startsecs = 0
++exitcodes=0
++autorestart=false
++priority=1
+  
+ [program:nginx]
+-command=/usr/sbin/nginx -g "daemon off;"
++command=sh -c 'sleep 1 && /usr/sbin/nginx -g "daemon off;"'
+ autostart=true
+ autorestart=true
+ startretries=5
+@@ -34,12 +43,16 @@
+ exitcodes=0
+ priority=1
+ 
+-[program:init_and_freeradius]
+-command=freeradius -X
+-priority=10
+-autorestart=true
++[program:init-cron]
++command=sh -c 'grep -E "^RD_" /etc/environment >/dev/null 2>&1  || env | grep -E "^RD_" >> /etc/environment'
++autostart=true
++startretries=0
++startsecs = 0
++exitcodes=0
++autorestart=false
++priority=9
+ 
+ [program:cron]
+-command=cron
++command=cron -f
+ autorestart=true
+ priority=10
+
+--- a/etc/nginx/sites-enabled/default	2025-07-28 18:34:10.097335120 -0700
++++ b/etc/nginx/sites-enabled/default	2025-07-28 18:40:50.921597800 -0700
+@@ -1,11 +1,15 @@
+ server {
+     listen 80 default_server;
+     listen [::]:80 default_server;
++    listen 443 ssl;
++    listen [::]:443 ssl;
+     index index.php index.html;
+     server_name php-docker.local;
+     error_log  /var/log/nginx/error.log;
+     access_log /var/log/nginx/access.log;
+     root /var/www/html;
++    ssl_certificate /etc/nginx/ssl/nginx.crt;
++    ssl_certificate_key /etc/nginx/ssl/nginx.key;
+ 
+     location / {
+         # First attempt to serve request as file, then
