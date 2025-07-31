@@ -1,0 +1,47 @@
+--- a/var/www/rdcore/cake4/rd_cake/src/Controller/Component/ApHelper22Component.php
++++ b/var/www/rdcore/cake4/rd_cake/src/Controller/Component/ApHelper22Component.php
+@@ -650,7 +650,7 @@ class ApHelper22Component extends Component {
+                     
+                     
+                     if($exit_id == $wan_bridge_id){
+-                        array_push($interfaces,$br_int);    
++                        array_push($interfaces,$this->br_int);
+                     }
+                     
+                     $nat_bridge = [
+@@ -703,7 +703,7 @@ class ApHelper22Component extends Component {
+                             $current_interfaces = array_merge($interfaces,$this->_lan_for($this->Hardware));
+                         }
+                         if($exit_id == $wan_bridge_id){
+-                            array_push($interfaces,$br_int);    
++                            array_push($interfaces,$this->br_int);
+                         }
+                         
+                         array_push($network,
+@@ -887,7 +887,7 @@ class ApHelper22Component extends Component {
+                  //____ LAYER 3 Tagged Bridge ____
+                 if($type == 'tagged_bridge_l3'){
+ 
+-                    $interfaces     = [$br_int.'.'.$ap_profile_e['vlan']];  //We only do eth0
++                    $interfaces     = [$this->br_int.'.'.$ap_profile_e['vlan']];  //We only do eth0
+                     $exit_point_id  = $ap_profile_e['id'];
+ 
+                     $this->l3_vlans[$exit_point_id] = $if_name;
+@@ -896,7 +896,7 @@ class ApHelper22Component extends Component {
+                             [
+                                 "interface"    => "$if_name",
+                                 "options"   => [
+-                                    'ifname'    => $br_int,
++                                    'ifname'    => $this->br_int,
+                                     'type'      => '8021q',
+                                     'proto'     => 'dhcp',
+                                     'vid'       => $ap_profile_e['vlan']
+@@ -905,7 +905,7 @@ class ApHelper22Component extends Component {
+                     }
+                     if($ap_profile_e['proto'] == 'static'){
+                         $options = [
+-                            'ifname'    => $br_int,
++                            'ifname'    => $this->br_int,
+                             'type'      => '8021q',
+                             'proto'     => $ap_profile_e['proto'],
+                             'ipaddr'    => $ap_profile_e['ipaddr'],
