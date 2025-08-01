@@ -10,22 +10,7 @@ use Cake\Http\Response;
 use Cake\Event\EventInterface;
 
 class DashboardController extends AppController{
-  
-    public $base = "Access Providers/Controllers/Dashboard/";
-    //protected $ui   = 'toplevel';
-    protected $ui       = 'default';
-    //protected $ui       = 'tab-grey';
-    //protected $plain    = true;
-    protected $plain    = false;
-    
-    //Options are: tab-teal, tab-blue, tab-orange, tab-green, tab-metal, tab-brown
-    protected $tabUINone    = 'default';
-    protected $tabUIOne     = 'tab-blue';
-    protected $tabUITwo     = 'tab-orange';
-    protected $tabUIThree   = 'tab-metal';
-    
-    protected $acl_base     = "Access Providers/Controllers/";
-      
+        
     public function initialize():void{  
         parent::initialize();
         $this->loadModel('Users');
@@ -36,14 +21,12 @@ class DashboardController extends AppController{
         $this->loadComponent('WhiteLabel');
         $this->loadModel('Clouds');
         $this->loadModel('CloudAdmins');
-        $this->Authentication->allowUnauthenticated([ 'authenticate', 'branding','checkToken']); 
-            
+        $this->Authentication->allowUnauthenticated([ 'authenticate', 'branding','checkToken']);       
     }    
     
     public function branding(){
     
-    	$ap_id					= 44; //root's ID (Small hack)
-    
+    	$ap_id					= 44; //root's ID (Small hack) 
     	$white_label            = [];
         $wl                     = $this->WhiteLabel->detail($ap_id);
         $white_label['active']  = true;
@@ -71,18 +54,12 @@ class DashboardController extends AppController{
        
         $r_and_c = $this->Aa->rights_and_components_on_cloud();
         $right   = $r_and_c['rights'];
-        $items = [];
-        if($right == 'admin'){
-            $items = $this->_nav_tree_admin($r_and_c);
+            
+        $items   = [];
+        if(($right == 'admin')||($right == 'granular')||($right == 'view')){
+            $items = $this->_nav_tree($r_and_c);
         }
-        
-        if($right == 'custom'){
-            $items = $this->_nav_tree_custom($r_and_c);
-        }
-        
-        if($right == 'view'){
-            $items = $this->_nav_tree_view($r_and_c);
-        }	  
+         
     	$this->set([
             'items'          => $items,
             'success'       => true
@@ -124,79 +101,24 @@ class DashboardController extends AppController{
             
             }else{
             
-                $this->set(array(
-                    'errors'        => array('username' => __('Confirm this name'),'password'=> __('Type the password again')),
+                $this->set([
+                    'errors'        => ['username' => __('Confirm this name'),'password'=> __('Type the password again')],
                     'success'       => false,
                     'message'       => __('Authentication failed')
-                ));
+                ]);
                 $this->viewBuilder()->setOption('serialize', true);
       
             }
         }else{
-            $this->set(array(
-                'errors'        => array('username' => __('Required'),'password'=> __('Required')),
+            $this->set([
+                'errors'        => ['username' => __('Required'),'password'=> __('Required')],
                 'success'       => false,
                 'message'       => __('HTTP POST Required -> Authentication failed')
-            ));
+            ]);
             $this->viewBuilder()->setOption('serialize', true);
             return;
         }
     }
-    
-    public function authenticateZZ(){
-    
-        $this->loadComponent('Auth', [
-            'authenticate' => [
-                'Form' => [
-                    'userModel' => 'Users',
-                    'fields' => ['username' => 'username', 'password' => 'password'],
-                    'passwordHasher' => [
-                        'className' => 'Fallback',
-                        'hashers' => [
-                            'Default',
-                            'Weak' => ['hashType' => 'sha1']
-                        ]
-                    ]
-                ]
-            ]
-        ]);
-    
-        if ($this->request->is('post')) {
-            $user = $this->Auth->identify();
-            if ($user){
-                //We can get the detail for the user
-                $u = $this->Users->find()->contain(['Groups'])->where(['Users.id' => $user['id']])->first();
-               
-                //Check for auto-compact setting
-                $auto_compact = false;
-                if($this->request->getData('auto_compact')){
-                    if($this->request->getData('auto_compact')=='true'){ //Carefull with the queryz's true and false it is actually a string
-                        $auto_compact = true;
-                    }
-                }
-                
-                $data = []; 
-                $data = $this->_get_user_detail($u,$auto_compact);
-                                  
-                $this->set([
-                    'data'          => $data,
-                    'success'       => true
-                ]);
-                $this->viewBuilder()->setOption('serialize', true);
-                
-            }else{
-            
-                $this->set([
-                    'errors'        => ['username' => __('Confirm this name'),'password'=> __('Type the password again')],
-                    'success'       => false,
-                    'message'       => __('Authentication failed'),
-                ]);
-                $this->viewBuilder()->setOption('serialize', true);               
-            }
-        }
-    }
-    
-    
     
     public function authenticate(){
 
@@ -259,10 +181,10 @@ class DashboardController extends AppController{
             $user   = $this->Users->find()->contain(['Groups'])->where(['Users.token' => $token])->first();
             
             if(!$user){
-                $this->set(array(
-                    'errors'        => array('token'=>'invalid'),
+                $this->set([
+                    'errors'        => ['token'=>'invalid'],
                     'success'       => false
-                ));
+                ]);
                 $this->viewBuilder()->setOption('serialize', true);
             
             }else{
@@ -286,27 +208,27 @@ class DashboardController extends AppController{
                      
         }else{
 
-            $this->set(array(
-                'errors'        => array('token'=>'missing'),
+            $this->set([
+                'errors'        => ['token'=>'missing'],
                 'success'       => false
-            ));
+            ]);
             $this->viewBuilder()->setOption('serialize', true);
         }
          
     }
     
     public function i18n(){
-        $items = array();
+        $items = [];
         $i18n = Configure::read('Admin.i18n');
         foreach($i18n as $i){
             if($i['active']){
                 array_push($items, $i);
             }
         }
-        $this->set(array(
-            'items' => $items,
-            'success' => true
-        ));
+        $this->set([
+            'items'     => $items,
+            'success'   => true
+        ]);
         $this->viewBuilder()->setOption('serialize', true);
     }
      
@@ -837,8 +759,7 @@ class DashboardController extends AppController{
                     'name'          => 'SETTINGS',
                     'controller'    => 'cSettings',
                     'id'            => 'pnlOtherSettings',
-                    'glyph'         => 'xf085',
-                    'class'         => 'other-green',
+                    'glyph'         => 'xf085'
                   ]
             ];
         }
@@ -850,16 +771,14 @@ class DashboardController extends AppController{
                     'name'          => 'CLOUDS',
                     'controller'    => 'cClouds',
                     'id'            => 'pnlOtherClouds',
-                    'glyph'         => 'xf0c2',
-                    'class'         => 'other-blue',
+                    'glyph'         => 'xf0c2'
                   ],
                 'column2' => 
                   [
                     'name'          => 'ADMINS',
                     'controller'    => 'cAccessProviders',
                     'id'            => 'pnlOtherAdmins',
-                    'glyph'         => 'xf084',
-                    'class'         => 'other-blue',
+                    'glyph'         => 'xf084'
                   ]
             ];
         }else{
@@ -869,8 +788,7 @@ class DashboardController extends AppController{
                     'name'          => 'CLOUDS',
                     'controller'    => 'cClouds',
                     'id'            => 'pnlOtherClouds',
-                    'glyph'         => 'xf0c2',
-                    'class'         => 'other-blue',
+                    'glyph'         => 'xf0c2'
                   ]
             ];                      
         }
@@ -881,16 +799,14 @@ class DashboardController extends AppController{
                     'name'          => 'LOGIN PAGES',
                     'controller'    => 'cDynamicDetails',
                     'id'            => 'pnlOtherLogin',
-                    'glyph'         => 'xf0a9',
-                    'class'         => 'other-brown',
+                    'glyph'         => 'xf0a9'
                   ],
                 'column2' => 
                   [
                     'name'          => 'HARDWARE',
                     'controller'    => 'cHardwares',
                     'id'            => 'pnlOtherHardware',
-                    'glyph'         => 'xf0a0',
-                    'class'         => 'other-brown',
+                    'glyph'         => 'xf0a0'
                   ]
             ];
             
@@ -908,8 +824,7 @@ class DashboardController extends AppController{
                     'name'          => 'FIREWALL',
                     'controller'    => 'cFirewallProfiles',
                     'id'            => 'pnlOtherFirewall',
-                    'glyph'         => 'xf06d',
-                    'class'         => 'other-brown',
+                    'glyph'         => 'xf06d'
                   ]
             ];
             
@@ -919,8 +834,7 @@ class DashboardController extends AppController{
                 'name'          => 'SQM PROFILES',
                 'controller'    => 'cSqmProfiles',
                 'id'            => 'pnlOtherSqmProfiles',
-                'glyph'         => 'xf00a',
-                'class'         => 'other-brown',
+                'glyph'         => 'xf00a'
               ],
             'column2' => 
               [
@@ -946,8 +860,7 @@ class DashboardController extends AppController{
                 'name'          => 'ACCEL-PPP SERVERS',
                 'controller'    => 'cAccel',
                 'id'            => 'pnlOtherAccel',
-                'glyph'         => 'xf10e',
-                'class'         => 'other-brown',
+                'glyph'         => 'xf10e'
               ]
         ];
         
@@ -958,8 +871,7 @@ class DashboardController extends AppController{
                 'name'          => 'MULTI WAN',
                 'controller'    => 'cMultiWan',
                 'id'            => 'pnlOtherMultiWan',
-                'glyph'         => 'xf0e8',
-                'class'         => 'other-brown',
+                'glyph'         => 'xf0e8'
               ],
             'column2' => 
               [
@@ -968,6 +880,23 @@ class DashboardController extends AppController{
                 'id'            => 'pnlOtherPasspoint',
                 'glyph'         => 'xf1eb'
               ]
+        ];
+        
+        $items[] =  [
+            'column1'   => 
+              [
+                'name'          => 'WPA-ENTERPRISE/HS2.0 UPLINKS',
+                'controller'    => 'cPasspointUplinks',
+                'id'            => 'pnlOtherPasspointUplinks',
+                'glyph'         => 'xf1eb'
+              ],
+           /* 'column2' => 
+              [
+                'name'          => 'HOTSPOT 2.0/PASSPOINT',
+                'controller'    => 'cPasspoint',
+                'id'            => 'pnlOtherPasspoint',
+                'glyph'         => 'xf1eb'
+              ]*/
         ];
         
         
@@ -1122,7 +1051,7 @@ class DashboardController extends AppController{
         //White Label
         $white_label            = [];
         if(Configure::read('whitelabel.active') == true){
-            $wl                     = $this->WhiteLabel->detail($id);         
+            $wl                     = $this->WhiteLabel->detail($id);      
             $white_label['active']  = true;
             $white_label['hName']   = $wl['wl_header'];
             $white_label['hBg']     = '#'.$wl['wl_h_bg'];
@@ -1186,7 +1115,7 @@ class DashboardController extends AppController{
         ];        
     }
     
-    private function _nav_tree_admin($rc){
+    private function _nav_tree($rc){
     
         $rights     = $rc['rights'];
         $components = $rc['components'];   	   
@@ -1248,107 +1177,6 @@ class DashboardController extends AppController{
     	return $items;  
     }
     
-    private function _nav_tree_custom($rc){
-    
-        $rights     = $rc['rights'];
-        $components = $rc['components'];   	   
-    	$items = [
-			[
-				'text' 		=> 'OVERVIEW',
-				'leaf' 		=> true,
-				'iconCls' 	=> 'x-fa fa-th-large',
-				'glyph'		=> 'xf009',
-				'controller'	=> 'cMainOverview',
-				'id'		=> 'tabMainOverview'
-			]
-        ];
-        
-        if($components['cmp_permanent_users'] || $components['cmp_vouchers']){      
-            $items[] = [
-				'text'		=> 'USERS',
-				'leaf'		=> true,
-				'iconCls'   => 'x-fa fa-user',
-				'controller'=> 'cMainUsers',
-				'id'		=> 'tabMainUsers',
-				'glyph'		=> 'xf2c0'
-			];      
-        }
-        
-        if($components['cmp_dynamic_clients'] || $components['cmp_nas'] || $components['cmp_profiles'] || $components['cmp_realms'] ){      
-            $items[] = [
-				'text'		=> 'RADIUS',
-				'leaf'		=> true,
-				'iconCls'	=> 'x-fa fa-circle-o-notch',
-				'controller'=> 'cMainRadius',
-				'id'		=> 'tabMainRadius',
-				'glyph'		=> 'xf1ce'
-			];      
-        }
-        
-        if($components['cmp_meshes'] || $components['cmp_ap_profiles']){      
-            $items[] = [
-				'text' 		=> 'NETWORK',
-				'leaf'	    => true,
-				'controller'=> 'cMainNetworks',
-				'id'		=> 'tabMainNetworks',
-				'iconCls'	=> 'x-fa fa-sitemap',
-				'glyph'		=> 'xf0e8'	
-			];      
-        }
-        
-        if($components['cmp_other']){      
-            $items[] = [
-				'text' 		=> 'OTHER',
-				'leaf'	    => true,
-				'id'		=> 'tabMainOther',
-				'controller'=> 'cMainOther',
-				'iconCls'	=> 'x-fa fa-gears',
-				'glyph'		=> 'xf085'	
-			];      
-        }
-    
-    	return $items;  
-    }
-    
-     private function _nav_tree_view(){
-      	   
-    	$items = [
-			[
-				'text' 		=> 'OVERVIEW',
-				'leaf' 		=> true,
-				'iconCls' 	=> 'x-fa fa-th-large',
-				'glyph'		=> 'xf009',
-				'controller'	=> 'cMainOverview',
-				'id'		=> 'tabMainOverview'
-			],
-			[
-				'text'		=> 'USERS',
-				'leaf'		=> true,
-				'iconCls'   => 'x-fa fa-user',
-				'controller'=> 'cMainUsers',
-				'id'		=> 'tabMainUsers',
-				'glyph'		=> 'xf2c0'
-			],
-		/*	[
-				'text'		=> 'RADIUS',
-				'leaf'		=> true,
-				'iconCls'	=> 'x-fa fa-circle-o-notch',
-				'controller'=> 'cMainRadius',
-				'id'		=> 'tabMainRadius',
-				'glyph'		=> 'xf1ce'
-			],	
-			[
-				'text' 		=> 'NETWORK',
-				'leaf'	    => true,
-				'controller'=> 'cMainNetworks',
-				'id'		=> 'tabMainNetworks',
-				'iconCls'	=> 'x-fa fa-sitemap',
-				'glyph'		=> 'xf0e8'	
-			],*/
-    	];
-    	
-    	return $items;  
-    }
     
     private function _nav_tree_blank(){
         

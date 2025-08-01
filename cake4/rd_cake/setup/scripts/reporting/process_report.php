@@ -38,8 +38,6 @@ $stmt_alert_U  = $conn->prepare("UPDATE alerts SET resolved = NOW() WHERE id = :
 
 //AP Uptimes
 $stmt_ap_uth_C    = $conn->prepare("INSERT into ap_uptm_histories (ap_id,ap_state,state_datetime,report_datetime,created,modified) VALUES(:ap_id,'1',NOW(),NOW(),NOW(),NOW())");
-//$stmt_ap_uth_R    = $conn->prepare("SELECT * FROM ap_uptm_histories WHERE ap_id = :ap_id ORDER BY report_datetime DESC");
-//$stmt_ap_uth_U    = $conn->prepare("UPDATE ap_uptm_histories SET modified = NOW(),report_datetime = NOW() WHERE id = :id");
 
 $stmt_ap_uth_R = $conn->prepare("
     SELECT id, ap_state 
@@ -54,8 +52,6 @@ $stmt_ap_uth_U = $conn->prepare("
     SET modified = NOW(), report_datetime = NOW() 
     WHERE id = :id
 ");
-
-
 
 
 //AP Alerts (only read and update needed)
@@ -242,168 +238,6 @@ function _doReports(){
 }
 
 
-function _doReportsZZ(){
-    global $conn,$MeshMacLookup,$counter,$ap_counter;
-    //===== MESH Reports =====
-    print("Do MESH Reports");
-    $completed = [];
-    $conclusion = [];
-    $stmt = $conn->prepare("SELECT * FROM temp_reports where ap_profile_id=0"); //ap_profile_id = 0 for mesh reports
-    $stmt->execute();  
-    while ($row = $stmt->fetch(PDO::FETCH_OBJ)){
-        $node_id = $row->node_id;
-        print("Now Doing ID $row->id\n");
-        $counter++;
-        array_push($completed,$row->id);
-        //Make sure the node is still in the nodes table (if it was deleted we don't care)
-        if(_is_node_missing($row->node_id)==true){
-            print("WARNING -> NODE $row->node_id IS MISSING (Skipping $row->id)\n");
-            continue;//Skip firther execution of this iteration
-        }
-             
-        $report = json_decode($row->report,true);
-        //--Sept 2023 -- 
-        if(!is_array($report)){ //Skip if the report is corrupted
-        	continue;
-        }
-           
-        _new_do_uptm_history($row);
-        _resolve_alert($row);
-         
-        //Add node_stations and node_ibss_connections
-        if (array_key_exists('network_info', $report)){
-            _node_stations($report['network_info'],$node_id); //We send the entity along in case the mesh0/1/2 changed and it needs updating
-        }     
-        //Build a lookup for the meshes
-        _doMeshMacLookup($row->mesh_id);
-        //Spider web
-        _do_vis($report);        
-        //Update the Loads
-        _do_node_load($node_id,$report['system_info']['sys']);
-        //Update system info (if required)
-        _do_node_system_info($node_id,$report['system_info']['sys']);
-                     
-        //------------
-        //--- Check if there are any lan_info items here
-        $gateway    = 'none';
-        $lan_proto  = '';
-        $lan_gw     = '';
-        $lan_ip     = '';
-        
-        if (array_key_exists('lan_info', $report)) {
-            $lan_proto  = $report['lan_info']['lan_proto'];
-            $lan_gw     = $report['lan_info']['lan_gw'];
-            $lan_ip     = $report['lan_info']['lan_ip'];
-        }
-        //--Check if we need to update the gateway field
-        if (array_key_exists('gateway', $report)){
-            $gateway = $report['gateway']; 
-        }
-        $c_data = ['gateway' => $gateway, 'lan_proto' => $lan_proto, 'lan_gw' => $lan_gw, 'lan_ip' => $lan_ip,'id' => $row->node_id];
-         
-        if(array_key_exists($row->mesh_id,$conclusion)){
-            if(array_key_exists($row->node_id,$conclusion[$row->mesh_id])){
-                $conclusion[$row->mesh_id][$row->node_id] = $c_data;
-            }else{
-                $conclusion[$row->mesh_id][$row->node_id] = [];
-                $conclusion[$row->mesh_id][$row->node_id] = $c_data;
-            }
-        }else{
-            $conclusion[$row->mesh_id] = [];
-            $conclusion[$row->mesh_id][$row->node_id] = [];
-            $conclusion[$row->mesh_id][$row->node_id] = $c_data;
-        }
-        //--------------                          
-    }
-    
-    $stmt_update_mesh = $conn->prepare("UPDATE meshes SET last_contact = NOW() WHERE id = :mesh_id");
-    $stmt_update_node = $conn->prepare("UPDATE nodes SET gateway = :gateway, lan_proto = :lan_proto, lan_gw = :lan_gw, lan_ip = :lan_ip  WHERE id = :id");
-    foreach(array_keys($conclusion) as $m){
-        $stmt_update_mesh->execute(['mesh_id' => $m]);
-        foreach(array_keys($conclusion[$m]) as $n){
-            $node_data = $conclusion[$m][$n];
-            $stmt_update_node->execute($node_data);
-        }   
-    }
-    
-    //Clean up
-    $stmt_del_nodes   = $conn->prepare("DELETE FROM temp_reports WHERE id = :id");
-    foreach($completed as $i){
-        $stmt_del_nodes->execute(['id' => $i]);  
-    }
-    //==== END MESH REPORTS====
-    
-    //=== AP REPORTS ====
-    $ap_completed 	= [];
-    $stmt_update_ap = $conn->prepare("UPDATE aps SET gateway = :gateway, lan_proto = :lan_proto, lan_gw = :lan_gw, lan_ip = :lan_ip  WHERE id = :id");
-    $ap_stmt 		= $conn->prepare("SELECT * FROM temp_reports where mesh_id=0"); //mesh_id = 0 for ap reports
-    $ap_stmt->execute();  
-    while ($row = $ap_stmt->fetch(PDO::FETCH_OBJ)){
-        $ap_id = $row->ap_id;
-        print("Now Doing ID $row->id\n");
-        $ap_counter++;
-        array_push($ap_completed,$row->id);
-        //Make sure the node is still in the nodes table (if it was deleted we don't care)
-        if(_is_ap_missing($row->ap_id)==true){
-            print("WARNING -> AP $row->ap_id IS MISSING (Skipping $row->id)\n");
-            continue;//Skip further execution of this iteration
-        }
-        
-        $report = json_decode($row->report,true);      
-        //--Sept 2023 -- 
-        if(!is_array($report)){ //Skip if the report is corrupted
-        	continue;
-        }
-               
-        _new_do_ap_uptm_history($row);
-        _resolve_ap_alert($row);
-        
-        //Add node_stations 
-        if (array_key_exists('network_info', $report)){
-            _ap_stations($report['network_info'],$ap_id);
-        }  
-          
-        //Update the Loads
-        _do_ap_load($ap_id,$report['system_info']['sys']);
-        //Update system info (if required)
-        _do_ap_system_info($ap_id,$report['system_info']['sys']);
-             
-        //------------
-        //--- Check if there are any lan_info items here
-        $gateway    = 'none';
-        $lan_proto  = '';
-        $lan_gw     = '';
-        $lan_ip     = '';
-        
-        if (array_key_exists('lan_info', $report)) {
-            $lan_proto  = $report['lan_info']['lan_proto'];
-            $lan_gw     = $report['lan_info']['lan_gw'];
-            $lan_ip     = $report['lan_info']['lan_ip'];
-        }
-        //--Check if we need to update the gateway field
-        if (array_key_exists('gateway', $report)){
-            $gateway = $report['gateway']; 
-        }
-        
-        //SQM Stats
-        if (array_key_exists('sqm', $report)) {
-            _do_sqm_stats($report['sqm'],'ap');
-        }
-        
-        $c_data = ['gateway' => $gateway, 'lan_proto' => $lan_proto, 'lan_gw' => $lan_gw, 'lan_ip' => $lan_ip,'id' => $ap_id];
-        $stmt_update_ap->execute($c_data);   
-        //--------------                  
-    
-    }
-          
-    //Clean up
-    $ap_stmt_del_nodes   = $conn->prepare("DELETE FROM temp_reports WHERE id = :id");
-    foreach($ap_completed as $i){
-        $ap_stmt_del_nodes->execute(['id' => $i]);  
-    }      
-    //==== END AP REPORTS ====
-}
-
 function _is_node_missing($node_id){
     global $conn;
     $node_missing = true;
@@ -481,21 +315,6 @@ function _resolve_alert($entity){
     }
 }
 
-function _new_do_ap_uptm_historyZZ($entity){
-    global $stmt_ap_uth_C,$stmt_ap_uth_U,$stmt_ap_uth_R;
-    $ap_id    = $entity->ap_id;         
-    $stmt_ap_uth_R->execute(['ap_id' => $ap_id]);
-    $result     = $stmt_ap_uth_R->fetch(PDO::FETCH_OBJ);  
-    if(isset($result->id)){
-        if ($result->ap_state == 1){
-            $stmt_ap_uth_U->execute(['id' => $result->id]);    
-        }else{       
-            $stmt_ap_uth_C->execute(['ap_id' => $ap_id]);      
-        } 
-    }else{
-         $stmt_ap_uth_C->execute(['ap_id' => $ap_id]);     
-    } 
-}
 
 function _new_do_ap_uptm_history($entity) {
     global $stmt_ap_uth_C, $stmt_ap_uth_U, $stmt_ap_uth_R;
@@ -516,8 +335,6 @@ function _new_do_ap_uptm_history($entity) {
     // Insert new entry if no previous record or if last state was offline
     $stmt_ap_uth_C->execute(['ap_id' => $ap_id]);      
 }
-
-
 
 
 function _resolve_ap_alert($entity){
@@ -553,7 +370,7 @@ function _node_stations($d,$node_id){
                             $s_data['created']          = date("Y-m-d H:i:s", $s_data['first_timestamp']);
                             $s_data['modified']         = date("Y-m-d H:i:s", $s_data['unix_timestamp']);
                             
-                            print_r($s_data);
+                            //print_r($s_data);
 
                             $stmt = $conn->prepare("INSERT into node_stations (node_id,radio_number,frequency_band,mesh_entry_id,mac_address_id,tx_bytes,rx_bytes,tx_packets,rx_packets,tx_bitrate,rx_bitrate,tx_failed,tx_retries,signal_now,signal_avg,created,modified)VALUES(:node_id,:radio_number,:frequency_band,:mesh_entry_id,:mac_address_id,:tx_bytes,:rx_bytes,:tx_packets,:rx_packets,:tx_bitrate,:rx_bitrate,:tx_failed,:tx_retries,:signal_now,:signal_avg,:created,:modified)");
                             $stmt->execute([
@@ -633,8 +450,19 @@ function _node_stations($d,$node_id){
                             }
                             $s_data['rx_bitrate'] = str_replace(" MBit/s","",$s_data['rx_bitrate']);
                             //--End rx_bitrate missing--
-                                                      
-                            $stmt = $conn->prepare("INSERT into node_ibss_connections (node_id,radio_number,frequency_band,if_mac,mac,tx_bytes,rx_bytes,tx_packets,rx_packets,tx_bitrate,rx_bitrate,authenticated,authorized,tdls_peer,preamble,tx_failed,tx_retries,mfp,signal_now,signal_avg,created,modified) VALUES(:node_id,:radio_number,:frequency_band,:if_mac,:mac,:tx_bytes,:rx_bytes,:tx_packets,:rx_packets,:tx_bitrate,:rx_bitrate,:authenticated,:authorized,:tdls_peer,:preamble,:tx_failed,:tx_retries,:mfp,:signal_now,:signal_avg,:created,:modified)");
+                            
+                            //--- Fixes May 2025 --
+                            $add_if_missing = ['tdls_peer','preamble','mpf'];
+                            foreach($add_if_missing as $missing_item){
+                                if(!isset($s_data[$missing_item])){
+                                    $s_data[$missing_item] = 0;
+                                }                           
+                            }
+                            if(isset($s_data['mpf'])){
+                                $s_data['mfp'] = $s_data['mpf'];
+                            }
+                                                                             
+                            $stmt = $conn->prepare("INSERT into node_ibss_connections (node_id,radio_number,frequency_band,if_mac,mac,tx_bytes,rx_bytes,tx_packets,rx_packets,tx_bitrate,rx_bitrate,tdls_peer,preamble,tx_failed,tx_retries,mfp,signal_now,signal_avg,created,modified) VALUES(:node_id,:radio_number,:frequency_band,:if_mac,:mac,:tx_bytes,:rx_bytes,:tx_packets,:rx_packets,:tx_bitrate,:rx_bitrate,:tdls_peer,:preamble,:tx_failed,:tx_retries,:mfp,:signal_now,:signal_avg,:created,:modified)");
                             $stmt->execute([
                                 'node_id'           => $s_data['node_id'],//1
                                 'radio_number'      => $s_data['radio_number'],//2
@@ -647,17 +475,15 @@ function _node_stations($d,$node_id){
                                 'tx_bitrate'        => $s_data['tx_bitrate'],//9
                                 'rx_packets'        => $s_data['rx_packets'],//10
                                 'tx_packets'        => $s_data['tx_packets'],//11
-                                'authenticated'     => $s_data['authenticated'],//12
-                                'authorized'        => $s_data['authorized'],//13
-                                'tdls_peer'         => $s_data['tdls_peer'],//14
-                                'preamble'          => $s_data['preamble'],//15
-                                'tx_failed'         => $s_data['tx_failed'],//16
-                                'tx_retries'        => $s_data['tx_retries'],//17
-                                'mfp'               => $s_data['mpf'],//Dislectic FIXME//18
-                                'signal_now'        => $s_data['signal_now'],//19
-                                'signal_avg'        => $s_data['signal_avg'],//20,
-                                'created'           => $s_data['created'],//21
-                                'modified'          => $s_data['modified']//22
+                                'tdls_peer'         => $s_data['tdls_peer'],//12
+                                'preamble'          => $s_data['preamble'],//13
+                                'tx_failed'         => $s_data['tx_failed'],//14
+                                'tx_retries'        => $s_data['tx_retries'],//15
+                                'mfp'               => $s_data['mpf'],//Dislectic FIXME//16
+                                'signal_now'        => $s_data['signal_now'],//17
+                                'signal_avg'        => $s_data['signal_avg'],//18,
+                                'created'           => $s_data['created'],//19
+                                'modified'          => $s_data['modified']//20
                             ]); 
                             //print_r($s_data);
                         }
@@ -686,27 +512,70 @@ function _ap_stations($d,$ap_id){
                             $s_data['modified']         = date("Y-m-d H:i:s", $s_data['unix_timestamp']);
                             $s_data['mac_address_id']   = getOrCreateMacAddressId($s_data['mac']);
                             unset($s_data['mac']);
+                                                     
+                            $s_data['rx_phy'] = detectPhy('rx', $s_data);
+                            $s_data['tx_phy'] = detectPhy('tx', $s_data);
                             
-                            $stmt = $conn->prepare("INSERT into ap_stations (ap_id,radio_number,frequency_band,ap_profile_entry_id,mac_address_id,tx_bytes,rx_bytes,tx_bitrate,rx_bitrate,tx_packets,rx_packets,tx_failed,tx_retries,signal_now,signal_avg,created,modified)VALUES(:ap_id,:radio_number,:frequency_band,:ap_profile_entry_id,:mac_address_id,:tx_bytes,:rx_bytes,:tx_bitrate,:rx_bitrate,:tx_packets,:rx_packets,:tx_failed,:tx_retries,:signal_now,:signal_avg,:created,:modified)");
+                            print_r($s_data);
+                            
+                            $stmt = $conn->prepare("INSERT INTO ap_stations (
+                                ap_id, radio_number, frequency_band, ap_profile_entry_id, mac_address_id,
+                                tx_bytes, rx_bytes, tx_bitrate, rx_bitrate, tx_packets, rx_packets,
+                                tx_failed, tx_retries, signal_now, signal_avg,
+                                tx_mcs, tx_nss, tx_short_gi, tx_phy, tx_mhz,
+                                rx_mcs, rx_short_gi, rx_phy, rx_mhz,
+                                noise, connected_time, vlan, wme, mfp, tdls,
+                                created, modified
+                            ) VALUES (
+                                :ap_id, :radio_number, :frequency_band, :ap_profile_entry_id, :mac_address_id,
+                                :tx_bytes, :rx_bytes, :tx_bitrate, :rx_bitrate, :tx_packets, :rx_packets,
+                                :tx_failed, :tx_retries, :signal_now, :signal_avg,
+                                :tx_mcs, :tx_nss, :tx_short_gi, :tx_phy, :tx_mhz,
+                                :rx_mcs, :rx_short_gi, :rx_phy, :rx_mhz,
+                                :noise, :connected_time, :vlan, :wme, :mfp, :tdls,
+                                :created, :modified
+                            )");
+                            
                             $stmt->execute([
-                                'ap_id'             => $s_data['node_id'],//1
-                                'radio_number'      => $s_data['radio_number'],//2
-                                'frequency_band'    => $s_data['frequency_band'],//3
-                                'ap_profile_entry_id'     => $s_data['mesh_entry_id'],//4
-                                'mac_address_id'    => $s_data['mac_address_id'],//5
-                                'rx_bytes'          => $s_data['rx_bytes'],//6
-                                'tx_bytes'          => $s_data['tx_bytes'],//7
-                                'rx_bitrate'        => $s_data['rx_bitrate'],//8
-                                'tx_bitrate'        => $s_data['tx_bitrate'],//9
-                                'rx_packets'        => $s_data['rx_packets'],//10
-                                'tx_packets'        => $s_data['tx_packets'],//11
-                                'tx_failed'         => $s_data['tx_failed'],//12
-                                'tx_retries'        => $s_data['tx_retries'],//13
-                                'signal_now'        => $s_data['signal_now'],//14
-                                'signal_avg'        => $s_data['signal_avg'],//15
-                                'created'           => $s_data['created'],//16
-                                'modified'          => $s_data['modified']//17
-                            ]); 
+                                'ap_id'             => $s_data['node_id'],
+                                'radio_number'      => $s_data['radio_number'],
+                                'frequency_band'    => $s_data['frequency_band'],
+                                'ap_profile_entry_id' => $s_data['mesh_entry_id'],
+                                'mac_address_id'    => $s_data['mac_address_id'],
+
+                                'tx_bytes'          => $s_data['tx_bytes'],
+                                'rx_bytes'          => $s_data['rx_bytes'],
+                                'tx_bitrate'        => $s_data['tx_bitrate'],
+                                'rx_bitrate'        => $s_data['rx_bitrate'],
+                                'tx_packets'        => $s_data['tx_packets'],
+                                'rx_packets'        => $s_data['rx_packets'],
+                                'tx_failed'         => $s_data['tx_failed'],
+                                'tx_retries'        => $s_data['tx_retries'],
+                                'signal_now'        => $s_data['signal_now'],
+                                'signal_avg'        => $s_data['signal_avg'],
+
+                                'tx_mcs'            => $s_data['tx_mcs'] ?? null,
+                                'tx_nss'            => $s_data['tx_nss'] ?? null,
+                                'tx_short_gi'       => $s_data['tx_short_gi'] ?? null,
+                                'tx_phy'            => $s_data['tx_phy'],
+                                'tx_mhz'            => $s_data['tx_mhz'] ?? null,
+
+                                'rx_mcs'            => $s_data['rx_mcs'] ?? null,
+                                'rx_short_gi'       => $s_data['rx_short_gi'] ?? null,
+                                'rx_phy'            => $s_data['rx_phy'],
+                                'rx_mhz'            => $s_data['rx_mhz'] ?? null,
+
+                                'noise'             => $s_data['noise'] ?? null,
+                                'connected_time'    => $s_data['connected_time'] ?? null,
+                                'vlan'              => $s_data['vlan'] ?? null,
+                                'wme'               => $s_data['wme'] ?? null,
+                                'mfp'               => $s_data['mfp'] ?? null,
+                                'tdls'              => $s_data['tdls'] ?? null,
+
+                                'created'           => $s_data['created'],
+                                'modified'          => $s_data['modified']
+                            ]);
+
                         }
                     }     
                 }
@@ -1148,6 +1017,14 @@ function getOrCreateMacAddressId($mac) {
 
     // Return existing MAC address ID
     return $existingMac['id'];
+}
+
+function detectPhy($prefix, $s_data) {
+    if (!empty($s_data["{$prefix}_eht"])) return 'eht';
+    if (!empty($s_data["{$prefix}_he"]))  return 'he';
+    if (!empty($s_data["{$prefix}_vht"])) return 'vht';
+    if (!empty($s_data["{$prefix}_ht"]))  return 'ht';
+    return 'legacy';
 }
 
 

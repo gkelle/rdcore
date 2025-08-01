@@ -17,6 +17,7 @@ Ext.define('Rd.view.components.cmbProfileComponent', {
         var me= this;
         var s = Ext.create('Ext.data.Store', {
         fields: ['id', 'name'],
+        pageSize    : 1000,
         listeners: {
             load: function(store, records, successful) {
             	if(me.include_all_option){
@@ -28,7 +29,8 @@ Ext.define('Rd.view.components.cmbProfileComponent', {
         proxy: {
                 type    : 'ajax',
                 format  : 'json',
-                batchActions: true, 
+                batchActions: true,
+                pageSize: 1000,
                 url     : '/cake4/rd_cake/profile-components/index-combo.json',
                 reader: {
                     type            : 'json',

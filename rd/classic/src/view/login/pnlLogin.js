@@ -113,36 +113,18 @@ Ext.define('Rd.view.login.pnlLogin', {
                         {
                             itemId      : 'inpUsername',
                             name        : "username",
-                          //  fieldLabel  : 'Email',
-                            emptyText   : 'Email',
+                            emptyText   : 'Username',
                             allowBlank  : false,
-                            blankText   : 'Enter Your Email'
+                            blankText   : 'Enter your username'
                         },
                         {
                             itemId      : 'inpPassword',                            
                             name        : 'password',
-                          //  fieldLabel  : i18n('sPassword'),
                             emptyText   : 'Password',
                             inputType   : 'password',
                             allowBlank  : false,
                             blankText   : i18n('sEnter_password')
                         },
-						/*{
-							xtype: 'container',
-							layout: 'hbox',
-							items: [
-								{
-									xtype: 'box',
-									flex : 1,
-									height: 30,
-									html: '  ' // TODO '<a href="#passwordreset" > Forgot Password ?</a>'
-								},
-								{
-									xtype: 'box',
-									html: '<a href="#register/nr" ><b> Register </b></a>'
-								}
-							]
-						}*/
                     ],
                     dockedItems: [{
                         xtype   : 'toolbar',

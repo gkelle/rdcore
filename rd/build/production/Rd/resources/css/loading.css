@@ -253,6 +253,85 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Slightly stronger shadow */
 }
 
+.banner-container { 
+  color: #29495b;
+  background :linear-gradient(135deg, #e6f0ff, #cce0ff, #99ccff);
+  box-shadow : 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding : 5px;
+}
 
 
+.speedtest-stats-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.speedtest-stat {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+}
+
+.speedtest-value {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.speedtest-label {
+    font-size: 14px;
+    color: gray;
+    margin-top: 5px;
+}
+
+.speedtest-secondary {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f4f4f4;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.6;
+    box-shadow: 0 0 4px rgba(0,0,0,0.1);
+}
+
+.speedtest-secondary-item {
+    margin-bottom: 6px;
+}
+
+.banner-link i {
+    font-style: normal !important;
+}
+
+.banner-c {
+    background: linear-gradient(to right, #f5f7fa, #c3cfe2);
+    border-bottom: 1px solid #ccc;
+    padding : 5px;
+}
+
+.banner-link {
+    margin: 0 50px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+    color: #3f474f;
+}
+
+.banner-link:hover {
+    color: #03a3a6;
+}
+
+.banner-link.selected {
+    color: #0056b3;
+    border-bottom: 2px solid #0056b3;
+}
+
+.connector-line {
+    border-bottom: 2px dashed #888;
+    margin-top: 20px;
+}
+
+.banner-link:hover::after {
+    border-color: #0056b3;
+}
 

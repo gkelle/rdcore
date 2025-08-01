@@ -25,6 +25,7 @@ class RadacctsController extends AppController {
         $this->loadModel('Users');
         $this->loadModel('PermanentUsers');
         $this->loadModel('Timezones');
+        $this->loadComponent('GridButtonsRba');
         $this->loadComponent('Aa');
         $this->loadComponent('Kicker');
         $this->loadComponent('Counters');
@@ -40,6 +41,7 @@ class RadacctsController extends AppController {
 		){
 
 			//Some defaults 
+			$depleted   = false;
 			$data_used	= null;
 			$data_cap	= null;
 			$time_used	= null;
@@ -144,8 +146,16 @@ class RadacctsController extends AppController {
 					}
 				}
 			}
+			
 
-			$data = ['data_used' => $data_used, 'data_cap' => $data_cap, 'time_used' => $time_used, 'time_cap' => $time_cap];
+		    if($data_used &&($data_used >= $data_cap )){
+		        $depleted = true;
+		    }
+		    if($time_used &&($time_used >= $time_cap )){
+		        $depleted = true;
+		    }
+
+			$data = ['data_used' => $data_used, 'data_cap' => $data_cap, 'time_used' => $time_used, 'time_cap' => $time_cap, 'depleted' => $depleted];
       
 			$this->set([
                 'success'   => true,
@@ -553,8 +563,7 @@ class RadacctsController extends AppController {
             'success'       => true,
             'data'          => $data
         ]);
-        $this->viewBuilder()->setOption('serialize', true);
-	
+        $this->viewBuilder()->setOption('serialize', true);	
 	}
 	
 
@@ -639,115 +648,28 @@ class RadacctsController extends AppController {
     //--------- END BASIC CRUD ---------------------------
 
     //----- Menus ------------------------
+    
     public function menuForGrid(){
-
         $user = $this->Aa->user_for_token($this);
         if(!$user){   //If not a valid user
             return;
         }
-
-        $timezone_id    = 316; //London by default  
-        $e_user         = $this->{'Users'}->find()->where(['Users.id' => $user['id']])->first();
-        if($e_user->timezone_id){
-            $timezone_id = $e_user->timezone_id;
-        } 
-
-        $scale = 'large';
-
-        $menu = [
-                ['xtype' => 'buttongroup','title' => null, 'items' => [
-                    ['xtype' =>  'splitbutton',  'glyph' => Configure::read('icnReload'), 'scale'   => $scale, 'itemId'    => 'reload',   'tooltip'    => __('Reload'),
-                        'menu'  => [
-                            'items' => [
-                                '<b class="menu-title">'.__('Reload every').':</b>',
-                              //  array( 'text'   => _('Cancel auto reload'),   'itemId' => 'mnuRefreshCancel', 'group' => 'refresh', 'checked' => true ),
-                                ['text'  => __('30 seconds'),      'itemId'    => 'mnuRefresh30s', 'group' => 'refresh','checked' => false ],
-                                ['text'  => __('1 minute'),        'itemId'    => 'mnuRefresh1m', 'group' => 'refresh' ,'checked' => false],
-                                ['text'  => __('5 minutes'),       'itemId'    => 'mnuRefresh5m', 'group' => 'refresh', 'checked' => false ],
-                                ['text'  => __('Stop auto reload'),'itemId'    => 'mnuRefreshCancel', 'group' => 'refresh', 'checked' => true]
-                            ]
-                        ]
-                ],
-                [
-                    'xtype' => 'tbseparator'
-                ],
-                [
-                        'xtype'         => 'button',
-                         
-                        //To list all
-                        //'glyph'         => Configure::read('icnWatch'),
-                        //'pressed'       => false,
-                        
-                        //To list only active
-                        'glyph'         => Configure::read('icnLight'),
-                        'pressed'       => true,
-                                
-                        'scale'         => $scale,
-                        'itemId'        => 'connected',
-                        'enableToggle'  => true,
-                         
-                        'ui'            => 'button-green',  
-                        'tooltip'       => __('Show only currently connected')
-                ],
-                [
-                    'xtype' => 'tbseparator'
-                ],
-                [
-                    'xtype'         => 'cmbTimezones', 
-                    'width'         => 200, 
-                    'itemId'        => 'cmbTimezone',
-                    'name'          => 'timezone_id', 
-                    'fieldLabel'    => '',
-                    'padding'       => '7 0 0 0',
-                    'margin'        => 0,
-                    'value'         => $timezone_id
-                ],
-                [
-                    'xtype' => 'tbseparator'
-                ],
-                [
-                        'xtype'         => 'button',
-                        'glyph'         => Configure::read('icnInfoCircle'),
-                        'pressed'       => false,                               
-                        'scale'         => $scale,
-                        'itemId'        => 'btnInfo',
-                        'enableToggle'  => true,
-                        'tooltip'       => __('Include more info (loads slower)')
-                ],               
-                ]],
-                ['xtype' => 'buttongroup','title' => null, 'items' => [
-                    ['xtype' => 'button', 'glyph'     => Configure::read('icnCsv'), 'scale' => $scale, 'itemId' => 'csv',      'tooltip'=> __('Export CSV')],
-                    ['xtype' => 'button', 'glyph'     => Configure::read('icnGraph'), 'scale' => $scale, 'itemId' => 'graph',    'tooltip'=> __('Usage graph')],
-                ]],
-                ['xtype' => 'buttongroup','title' => null, 'items' => [
-                    ['xtype' => 'button', 'glyph'     => Configure::read('icnKick'),'scale' => $scale, 'itemId' => 'kick', 'tooltip'=> __('Kick user off')],
-                    ['xtype' => 'button', 'glyph'     => Configure::read('icnClose'),'scale' => $scale, 'itemId' => 'close','tooltip'=> __('Close session')],
-                ]],
-                [
-                    'xtype'   => 'component', 
-                    'itemId'  => 'totals',  
-                     'tpl'    => [
-                        "<div style='font-size:larger;width:400px;'>",
-                        "<ul class='fa-ul'>",
-                        "<li style='padding:2px;'>",
-                        "<span class='fa-li' style='font-family:FontAwesome;'>&#xf1c0</span> {in} in {out} out {total} total</span></li>",
-                        "<li style='padding:2px;'><i class='fa-li fa fa-arrow-right'></i> {total_connected} items</li>",
-                        "</ul>",
-                        "</div>"                    
-                    ],
-                    'data'   =>  [],
-                    'cls'    => 'lblRd'
-                ]               
-        ];
         
-
-        $this->set([
+        $this->timezone_id  = 316; //London by default  
+        $e_user             = $this->{'Users'}->find()->where(['Users.id' => $user['id']])->first();
+        if($e_user->timezone_id){
+            $this->timezone_id = $e_user->timezone_id;
+        } 
+        
+        $role  = $this->Aa->rights_on_cloud();         
+        $menu  = $this->GridButtonsRba->returnButtons($role);
+        $this->set(array(
             'items'         => $menu,
             'success'       => true
-        ]);
+        ));
         $this->viewBuilder()->setOption('serialize', true);
     }
-
+        
     //______ END EXT JS UI functions ________
 
   	function _build_common_query($query, $user,$totals=false){ //We add the $totals flag. If it is set to true; we do not do the sort part (breaks with Postgresql)

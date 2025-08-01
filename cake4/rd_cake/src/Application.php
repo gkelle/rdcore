@@ -28,7 +28,7 @@ use Cake\ORM\Locator\TableLocator;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
 
-
+//-- Authentication Plugin --
 use Authentication\AuthenticationService;
 use Authentication\AuthenticationServiceInterface;
 use Authentication\AuthenticationServiceProviderInterface;
@@ -40,6 +40,7 @@ use Psr\Http\Message\ServerRequestInterface;
 #use Authentication\Identifier\LdapIdentifier;
 #use Authentication\Identifier\CustomLdapIdentifier;
 use App\Authentication\Identifier\CustomTokenIdentifier;
+
 
 use Cake\ORM\TableRegistry;
 
@@ -84,7 +85,10 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         }
 
         // Load more plugins here
+        //--Jan 2025--
         $this->addPlugin('Authentication');
+        //--Mar 2025--
+        $this->addPlugin('Authorization');
     }
 
     /**
@@ -197,7 +201,7 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         $settingsTable  = TableRegistry::getTableLocator()->get('UserSettings');        
         $ldapSetting    = $settingsTable->find()->where(['UserSettings.user_id' => -1, 'UserSettings.name' => 'ldap_enabled'])->first();
         
-        if($ldapSetting && $ldapSetting->value == '1'){
+       if($ldapSetting && $ldapSetting->value == '1'){
    
             // Load LDAP Identifier       
             $service->loadIdentifier('Authentication.CustomLdapIdentifier', [

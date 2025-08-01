@@ -31,6 +31,7 @@ class RegisterUsersController extends AppController {
         $this->loadComponent('Otp');
         $this->loadComponent('RdSms'); 
         $this->loadComponent('Formatter');
+        $this->Authentication->allowUnauthenticated(['newPermanentUser','otpSubmit','otpRequest','otpConfirm','lostPassword']); 
     }
     
     public function newPermanentUser(){

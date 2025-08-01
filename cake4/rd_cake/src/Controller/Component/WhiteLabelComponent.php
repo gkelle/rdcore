@@ -65,10 +65,12 @@ class WhiteLabelComponent extends Component {
         $wl             = [];
         $found			= false;      
         foreach($q_r as $i){
-        	$found = true;
+        	
             $item = $i->name;
             if (in_array($item, $looking_for)) {
             
+                $found = true;
+                
                 $wl["$item"] = $i->value;
                  
                 if($item == 'wl_active'){

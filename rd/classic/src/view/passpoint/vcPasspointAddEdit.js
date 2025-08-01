@@ -30,6 +30,12 @@ Ext.define('Rd.view.passpoint.vcPasspointAddEdit', {
         },
         'pnlPasspointAddEdit #btnCustom' : {
             click   : 'btnCustom'
+        },
+        'cmbVenueGroups' : {
+            change  : 'venueGroupsChange'
+        },
+        '#cmbNetworkAuthType' : {
+            change  : 'networkAuthTypeChange'        
         }
     },
     pnlAfterRender : function(){
@@ -53,7 +59,8 @@ Ext.define('Rd.view.passpoint.vcPasspointAddEdit', {
             url         : me.getUrlView(), 
             method      : 'GET',
             params      : { profile_id: profile_id },
-            success     : function(a,b,c){        
+            success     : function(a,b,c){  
+                  
                 if(b.result.data.passpoint_domains){
             	    Ext.Array.forEach(b.result.data.passpoint_domains,function(domain,index){
             	         me.getView().down('#cntDomains').add({
@@ -102,17 +109,33 @@ Ext.define('Rd.view.passpoint.vcPasspointAddEdit', {
             	    })	            			
             	}
             	
+            	if(b.result.data.custom){
+            	   // Ext.defer(function() {
+                        me.getView().down('#btnCustom').setPressed(true);  // or false
+                        me.btnCustom();
+                   // }, 500);
+            	}
+            	
             	me.warningCheck(); //Lastly                       
             }
         });          
+    },
+    venueGroupsChange: function(){
+        var me = this;
+        var vgId    = me.getView().down('cmbVenueGroups').getValue();
+        var store   = me.getView().down('cmbVenueGroupTypes').getStore();
+        store.getProxy().setExtraParams({venue_group_id:vgId});
+ 		store.reload();        
     },
     warningCheck : function(){
         var me = this;
         var txtTest = me.getView().down('#cntServiceProviders').down('textfield');
         if(txtTest){
             me.getView().down('#cntServiceProviders').down('#lblWarn').hide();
+            return false;
         }else{
             me.getView().down('#cntServiceProviders').down('#lblWarn').show();
+            return true;
         }        
     },
     addDomain: function(btn){
@@ -179,6 +202,16 @@ Ext.define('Rd.view.passpoint.vcPasspointAddEdit', {
         var me          = this;
         var formPanel   = this.getView();
         
+        if(me.warningCheck()){
+            Ext.ux.Toaster.msg(
+                'Add a service provider',
+                'Add at least one service provider',
+                Ext.ux.Constants.clsError,
+                Ext.ux.Constants.msgError
+            );
+            return;
+        }
+        
         var url         = me.getUrlEdit();
         if(me.getView().passpoint_profile_id == 0){
             url = me.getUrlAdd();   
@@ -205,17 +238,30 @@ Ext.define('Rd.view.passpoint.vcPasspointAddEdit', {
     },
     btnEasy : function(){
         var me = this;
+        var view = me.getView();
+        view.setLoading(true);
         Ext.Array.forEach(me.getView().customFields,function(itemId,index){
-            me.getView().down('#'+itemId).hide();
-            me.getView().down('#'+itemId).disable();     
+            view.down('#'+itemId).hide();
+            view.down('#'+itemId).disable();     
         });
-        
+        view.setLoading(false);
     },
     btnCustom : function(){
         var me = this;
         Ext.Array.forEach(me.getView().customFields,function(itemId,index){
             me.getView().down('#'+itemId).show();
             me.getView().down('#'+itemId).enable();
-        });     
-    } 
+        });  
+    },
+    networkAuthTypeChange : function(cmb){
+        var me      = this;
+        var value   = cmb.getValue();
+        if(value == '02'){
+            me.getView().down('#txtNetworkAuthUrl').enable();
+            me.getView().down('#txtNetworkAuthUrl').show();    
+        }else{
+            me.getView().down('#txtNetworkAuthUrl').hide();
+            me.getView().down('#txtNetworkAuthUrl').disable(); 
+        }      
+    }
 });

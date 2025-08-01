@@ -33,7 +33,7 @@ Ext.define('Rd.view.aps.cmbApExits', {
     ),   
     initComponent: function(){
         var me      = this;
-        var s       = Ext.create('Ext.data.Store', {
+        /*var s       = Ext.create('Ext.data.Store', {
             fields: ['id', 'type'],
             proxy: {
                     type    : 'ajax',
@@ -46,9 +46,9 @@ Ext.define('Rd.view.aps.cmbApExits', {
                         messageProperty : 'message'
                     }
             },
-            autoLoad: true
+            autoLoad: false
         });
-        me.store = s;
+        me.store = s;*/
         me.callParent(arguments);
     }
 });

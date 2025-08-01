@@ -67,7 +67,10 @@ class LdapComponent extends Component {
                 $test_number = 2;
                 $test_name   = 'Find Username';
                 $this->_setErrorHandler();
-                $search_result = ldap_search($ldap_conn, $ldapSettings['ldap_base_dn'], $search_filter);
+                
+                $attrs   = ['cn', 'uid', 'memberOf','dn'];  // explicitly ask for memberof (26May 2025 - For RBA)
+                
+                $search_result = ldap_search($ldap_conn, $ldapSettings['ldap_base_dn'], $search_filter,$attrs);
                 // Restore the original error handler
                 restore_error_handler();
                 if (!$search_result) {

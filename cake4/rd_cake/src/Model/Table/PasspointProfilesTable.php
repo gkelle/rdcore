@@ -11,13 +11,19 @@ class PasspointProfilesTable extends Table {
         $this->addBehavior('Timestamp');  
         $this->belongsTo('Clouds');
         $this->belongsTo('PasspointNetworkTypes'); 
-        $this->belongsTo('PasspointVenueTypes');
+        $this->belongsTo('PasspointVenueGroups');
+        $this->belongsTo('PasspointVenueGroupTypes');
         
         //Delete the 'hasMany' items...
         $this->hasMany('PasspointDomains',['dependent' => true]);
         $this->hasMany('PasspointNaiRealms',['dependent' => true]); 
         $this->hasMany('PasspointRcois',['dependent' => true]); 
         $this->hasMany('PasspointCellNetworks',['dependent' => true]);
+        $this->hasMany('PasspointProfileSettings',['dependent' => true]);
+        
+        //Dont delete these ones
+        $this->hasMany('ApProfileEntries',['dependent' => false]);
+        $this->hasMany('MeshEntries',['dependent' => false]);
     }
       
     public function validationDefault(Validator $validator):Validator{

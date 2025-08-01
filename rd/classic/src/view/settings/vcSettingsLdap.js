@@ -12,28 +12,41 @@ Ext.define('Rd.view.settings.vcSettingsLdap', {
         },
         '#chkLdapEnabled' : {
             change : 'onChkLdapEnabledChange'
+        },
+        '#chkLdapRbaEnabled' : {
+            change : 'onChkLdapRbaEnabledChange'
+        },
+        'cntSettingsLdapRba #chkSettingsLdapRba' : {
+            change  : 'onChkSettingsLdapRbaChange'
         }
     },
     onChkLdapEnabledChange: function(chk){
         var me      = this;
-        var pnl     = chk.up('form');
+        var form    = chk.up('form');
+        var cnt     = chk.up('#cntLdap');
         var value   = chk.getValue();
         if(value){
-            pnl.down('#btnLdapTest').setDisabled(false);
-            pnl.down('#txtLdapBindPassword').enable();
+            cnt.down('#btnLdapTest').setDisabled(false);
+            cnt.down('#txtLdapBindPassword').enable();
         }else{
-            pnl.down('#btnLdapTest').setDisabled(true);
-            pnl.down('#txtLdapBindPassword').disable();
+            cnt.down('#btnLdapTest').setDisabled(true);
+            cnt.down('#txtLdapBindPassword').disable();
         }    
-        pnl.query('field').forEach(function(item){
+        cnt.query('field').forEach(function(item){
             if(value){
-                item.setDisabled(false);                     
+                item.setDisabled(false);                 
             }else{
                 if(item.getItemId() !== 'chkLdapEnabled'){
                     item.setDisabled(true);   
                 }        
            }                 
         });
+        
+        if(value){
+            form.down('#pnlLdapRba').setDisabled(false);
+        }else{
+            form.down('#pnlLdapRba').setDisabled(true);    
+        }        
     },
     onViewActivate: function(pnl){
         var me = this;
@@ -87,4 +100,45 @@ Ext.define('Rd.view.settings.vcSettingsLdap', {
             failure  : Ext.ux.formFail
         });       
     },
+    onChkLdapRbaEnabledChange : function(chk){
+        var me      = this;
+        var cnt     = chk.up('#cntLdapRba');
+        var value   = chk.getValue();
+        if(value){
+            cnt.down('#txtLdapGroupAttribute').setDisabled(false);
+            cnt.down('#cmbClouds').setDisabled(false);
+            cnt.down('#cmbRealm').setDisabled(false);
+        }else{
+            cnt.down('#txtLdapGroupAttribute').setDisabled(true);
+            cnt.down('#cmbClouds').setDisabled(true);
+            cnt.down('#cmbRealm').setDisabled(true);
+        }
+        cnt.query('cntSettingsLdapRba').forEach(function(item){
+            if(value){
+                item.setDisabled(false);                 
+            }else{
+                item.setDisabled(true);         
+           }                 
+        });          
+    },
+    onChkSettingsLdapRbaChange : function(chk){
+        var me      = this;
+        var cnt     = chk.up('cntSettingsLdapRba');
+        var value   = chk.getValue();
+        
+        cnt.query('checkboxgroup').forEach(function(item){
+            if(value){
+                item.setDisabled(false);                 
+            }else{
+                item.setDisabled(true);         
+           }                 
+        });
+        cnt.query('textfield').forEach(function(item){
+            if(value){
+                item.setDisabled(false);                 
+            }else{
+                item.setDisabled(true);         
+           }                 
+        });        
+    }
 });

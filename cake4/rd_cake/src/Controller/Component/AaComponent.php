@@ -3,7 +3,7 @@
 //---- Author: Dirk van der Walt
 //---- License: GPL v3
 //---- Description: A component used to determine Authentication and Authorization of a request
-//---- Date: 26-AUG-2022
+//---- Date: 18-MAR-2025
 //------------------------------------------------------------
 
 namespace App\Controller\Component;
@@ -119,6 +119,55 @@ class AaComponent extends Component {
         return false;   
     }
     
+    public function checkRbaAccess($user){
+    
+        $action     = $this->getController()->getRequest()->getParam('action');
+        $userRole   = $user['role'];
+        
+        $crtl_name  = $this->getController()->getRequest()->getParam('controller');
+        $crtl_name  = 'Rba'.$crtl_name;
+        
+        $fileName   = $crtl_name.'.php'; // Replace with your config file name
+        $filePath   = CONFIG . $fileName;
+
+        if (!file_exists($filePath)) {
+            return $user;
+        } 
+        
+        Configure::load($crtl_name);
+        $acl  = Configure::read($crtl_name);
+
+        // Get allowed actions for the role
+        $allowedActions = $acl[$userRole];
+        
+        //Should we log the actions on this controller
+        if(isset($acl['logActions'])&&($acl['logActions'])){
+            //--Log Action--
+        }
+        
+        // Allow all actions if the role has '*'
+        if (in_array('*', $allowedActions)) {
+            $user['rba_allowed'] = $allowedActions;
+            return $user;
+        }
+        
+        // Check if the action is allowed
+        if(in_array($action, $allowedActions)){
+            $user['rba_allowed'] = $allowedActions;
+            return $user;
+        }      
+    }
+    
+    public function denyRbaAccess(){
+    
+        $controller = $this->getController();
+        $controller->set([
+            'success' => false,
+            'message' => __('Access denied'),
+        ]);
+        $controller->viewBuilder()->setOption('serialize', true);
+    }
+    
     //-------------
     
      private function _rights_and_components_on_cloud(){
@@ -204,103 +253,76 @@ class AaComponent extends Component {
                 return false;
             default:
                 return false;
-        }
-        
-    }   
-       
-    private function _check_if_valid($with_cloud=true){
-        //First we will ensure there is a token in the request
-        $controller = $this->getController();
-        $request 	= $controller->getRequest();
-        $r_data		= $request->getData();
-        $q_data		= $request->getQuery();    
-        $token 		= false;
-        $cloud_id	= false;
+        }        
+    } 
+    
+    private function _check_if_valid($with_cloud = true){
 
-		//==IS TOKEN PRESENT AND VALID==
-        if(isset($r_data['token'])){
-            $token = $r_data['token'];
-        }elseif(isset($q_data['token'])){ 
-            $token = $q_data['token'];
-        }       
-        
-        if($token != false){
-            if(strlen($token) != 36){
-                $result = ['success' => false, 'message' => __('Token in wrong format')];
-            }else{
-                //Find the owner of the token
-                $result = $this->_find_token_owner($token);
-            }
-        }else{
-            $result = ['success' => false, 'message' => __('Token missing')];
+        $controller = $this->getController();
+        $request    = $controller->getRequest();
+        $action     = $request->getParam('action');
+        $r_data     = $request->getData();
+        $q_data     = $request->getQuery();
+
+
+        $token      = $r_data['token'] ?? $q_data['token'] ?? false;
+        $cloud_id   = $r_data['cloud_id'] ?? $q_data['cloud_id'] ?? $q_data['settings_cloud_id'] ?? false;
+
+        // Check if the token is present and valid
+        if (!$token) {
+            return $this->_fail_response(__('Token missing'));
         }
-        //==END IS TOKEN PRESENT AND VALID==
-        
-        if($with_cloud == true){
-		    //==IS cloud_id PRESENT AND VALID==
-		    if(isset($r_data['cloud_id'])){
-		        $cloud_id = $r_data['cloud_id'];
-		    }elseif(isset($q_data['cloud_id'])){ 
-		        $cloud_id = $q_data['cloud_id'];
-		    }
-		    
-		    //-----!!!---
-		    if(isset($q_data['settings_cloud_id'])){ //Override for settings Window
-		   		$cloud_id  = $q_data['settings_cloud_id'];
-		   	}
-		   	//----!!!----
-		          
-		    if($cloud_id == false){
-		    	$result = ['success' => false, 'message' => __('Cloud ID Missing')];
-		    }
-		    		    
-		    //==END IS cloud_id PRESENT AND VALID==
-		}
-        
-        //If it failed - set the controller up
-        if($result['success'] == false){
-        	$controller = $this->getController();
-        	$controller->set([
-                'success'   => $result['success'],
-                'message'   => $result['message']
-            ]);
-			$controller->viewBuilder()->setOption('serialize', true);
-            return false;
-        }else{
-        	if($result['user']['group_name'] == Configure::read('group.admin')){         	
-            	return $result['user']; //Admin does not have any problems :-)
-           	}elseif($result['user']['group_name'] == Configure::read('group.ap')){
-           		if($with_cloud == true){
-		       		$user_id = $result['user']['id'];
-		       		if($this->_can_manage_cloud($user_id,$cloud_id)){
-		       			return $result['user']; //User are allowed on Cloud
-		       		}else{
-		       			$this->fail_no_rights();
-		       			return false;
-		       		}
-		      	}else{
-		      		return $result['user']; //No need to check the cloud_id
-		      	}
-           	}else{
-           		$this->fail_no_rights();
-           		return false;
-           	}
-        }   
+
+        if (strlen($token) !== 36) {
+            return $this->_fail_response(__('Token in wrong format'));
+        }
+
+        // Find the owner of the token
+        $result = $this->_find_token_owner($token);
+        if (!$result['success']) {
+            return $this->_fail_response($result['message']);
+        }
+
+        // Check if cloud_id is required and valid
+        if ($with_cloud && !$cloud_id) {
+            return $this->_fail_response(__('Cloud ID Missing'));
+        }
+
+        // Validate user group and permissions
+        $user       = $result['user'];
+        $groupName  = $user['group_name'];
+        $isAdmin    = ($groupName === Configure::read('group.admin'));
+        $isApUser   = ($groupName === Configure::read('group.ap'));
+
+        if ($isAdmin) {
+            $user['role'] = 'admin';
+            return $user;
+        }
+
+        if ($isApUser) {
+            if ($with_cloud){
+                $role = $this->_can_manage_cloud($user['id'], $cloud_id);
+                $user['role'] = $role;          
+            }
+            return $user;
+        }
+
+        return $this->fail_no_rights();
     }
-      
+          
     private function _can_manage_cloud($user_id,$cloud_id){
     
-    	$clouds			= TableRegistry::get('Clouds');
+    	$clouds	    = TableRegistry::get('Clouds');   	
+    	$is_owner	= $clouds->find()->where(['Clouds.id' => $cloud_id, 'Clouds.user_id' => $user_id])->first();
     	
-    	$is_owner		= $clouds->find()->where(['Clouds.id' => $cloud_id, 'Clouds.user_id' => $user_id])->first();
     	if($is_owner){
-    		return true;
+    		return 'admin';
     	}
     	  
     	$cloud_admins  	= TableRegistry::get('CloudAdmins');
-    	$count = $cloud_admins->find()->where(['CloudAdmins.user_id' => $user_id,'CloudAdmins.cloud_id' => $cloud_id])->count();
-    	if($count > 0){
-    		return true;
+    	$cloudAdmin     = $cloud_admins->find()->where(['CloudAdmins.user_id' => $user_id,'CloudAdmins.cloud_id' => $cloud_id])->first();
+    	if($cloudAdmin){
+    		return $cloudAdmin->permissions;
     	}
     	return false;
     }
@@ -338,6 +360,18 @@ class AaComponent extends Component {
         	'message'       => $message
         ]);
 		$controller->viewBuilder()->setOption('serialize', true);
+    }
+    
+    // Helper method to handle failure responses
+    private function _fail_response($message){
+
+        $controller = $this->getController();
+        $controller->set([
+            'success' => false,
+            'message' => $message,
+        ]);
+        $controller->viewBuilder()->setOption('serialize', true);
+        return false;
     }
     
 }

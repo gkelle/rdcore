@@ -19,6 +19,17 @@ if not exists (select * from information_schema.columns
     alter table nas add column `coa_port` INT DEFAULT 3799 NOT NULL;
 end if;
 
+if not exists (select * from information_schema.columns
+    where column_name = 'retries' and table_name = 'nas' and table_schema = 'rd') then
+    alter table nas add column `retries` INT DEFAULT 0 NOT NULL;
+end if;
+
+if not exists (select * from information_schema.columns
+    where column_name = 'timeout' and table_name = 'nas' and table_schema = 'rd') then
+    alter table nas add column `timeout` INT DEFAULT 5 NOT NULL;
+end if;
+
+
 end//
 
 delimiter ;

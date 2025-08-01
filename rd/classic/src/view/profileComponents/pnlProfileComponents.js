@@ -69,7 +69,8 @@ Ext.define('Rd.view.profileComponents.pnlProfileComponents', {
         );
                    
         me.store = Ext.create('Ext.data.Store',{
-            model: 'Rd.model.mProfileComponentDataView',
+            model       : 'Rd.model.mProfileComponentDataView',
+            pageSize    : 1000,
             proxy: {
                 type        :'ajax',
                 url         : '/cake4/rd_cake/profile-components/index-data-view.json',

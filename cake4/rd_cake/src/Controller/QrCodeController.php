@@ -95,7 +95,7 @@ class QrCodeController extends AppController{
             $hidden = 'H';
         }
         
-        $type = '';
+        $type = 'nopass'; //(Note: T:nopass explicitly declares it's an open network)
         if($req_q['encryption'] == 'wep'){
             $type = 'WEP';
         }

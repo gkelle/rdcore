@@ -139,7 +139,9 @@ class FormatterComponent extends Component {
         // the number of minutes, but we're interested in 
         // minutes past the hour: to get that, we need to 
         // divide by 60 again and keep the remainder
-        $minutes = intval(($sec / 60) % 60); 
+        $sec = is_numeric($sec) ? (int)$sec : 0;
+        $minutes = floor(($sec % 3600) / 60);
+ 
 
         // then add to $hms (with a leading 0 if needed)
         $hms .= str_pad($minutes, 2, "0", STR_PAD_LEFT). ':';

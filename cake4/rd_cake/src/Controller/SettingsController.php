@@ -854,7 +854,38 @@ class SettingsController extends AppController{
             $data  = $this->request->getData();       
             $check_items = [
 			    'ldap_enabled',
-			    'ldap_use_ldaps' 
+			    'ldap_use_ldaps',
+			    'ldap_rba_enabled',
+			    'ldap_rba_admin_enabled',
+			    'ldap_rba_admin_cmp_permanent_users',
+			    'ldap_rba_admin_cmp_vouchers',
+                'ldap_rba_admin_cmp_dynamic_clients',
+                'ldap_rba_admin_cmp_nas',
+                'ldap_rba_admin_cmp_profiles',
+                'ldap_rba_admin_cmp_realms',
+                'ldap_rba_admin_cmp_meshes',
+                'ldap_rba_admin_cmp_ap_profiles',
+                'ldap_rba_admin_cmp_other',
+			    'ldap_rba_operator_enabled',	    
+			    'ldap_rba_operator_cmp_permanent_users',
+			    'ldap_rba_operator_cmp_vouchers',
+                'ldap_rba_operator_cmp_dynamic_clients',
+                'ldap_rba_operator_cmp_nas',
+                'ldap_rba_operator_cmp_profiles',
+                'ldap_rba_operator_cmp_realms',
+                'ldap_rba_operator_cmp_meshes',
+                'ldap_rba_operator_cmp_ap_profiles',
+                'ldap_rba_operator_cmp_other',			    
+			    'ldap_rba_view_enabled',
+			    'ldap_rba_view_cmp_permanent_users',
+			    'ldap_rba_view_cmp_vouchers',
+                'ldap_rba_view_cmp_dynamic_clients',
+                'ldap_rba_view_cmp_nas',
+                'ldap_rba_view_cmp_profiles',
+                'ldap_rba_view_cmp_realms',
+                'ldap_rba_view_cmp_meshes',
+                'ldap_rba_view_cmp_ap_profiles',
+                'ldap_rba_view_cmp_other'		    
 		    ];		
             foreach($check_items as $i){
                 if(isset($data[$i])){

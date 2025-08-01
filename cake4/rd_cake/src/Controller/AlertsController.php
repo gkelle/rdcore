@@ -17,7 +17,6 @@ use Cake\Mailer\Email;
 
 class AlertsController extends AppController{
   
-    public $base  			= "Access Providers/Controllers/Alerts/";  
     protected $main_model 	= 'Alerts';
   
     public function initialize():void{  

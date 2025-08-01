@@ -342,6 +342,193 @@ class ApReportsController extends AppController {
         ]);
         $this->viewBuilder()->setOption('serialize', true);
     }
+    
+    public function viewClients(){
+
+		$user = $this->Aa->user_for_token($this);
+        if(!$user){   //If not a valid user
+            return;
+        }
+
+		if(null == $this->request->getQuery('ap_id')){
+			$this->set([
+		        'message'	=> ["message"	=>"AP ID (ap_id) missing"],
+		        'success' => false
+		    ]);
+		    $this->viewBuilder()->setOption('serialize', true);
+			return;
+		}
+		$ap_entry_id = -1; //default is all
+		
+		if($this->request->getQuery('ap_entry_id')){		    
+		    $ap_entry_id = $this->request->getQuery('ap_entry_id');
+		}
+            
+        $vendor_file        = APP."StaticData".DS."mac_lookup.txt";
+        $this->vendor_list  = file($vendor_file);
+        
+        $items  	= [];
+        $this->timespan   = $this->request->getQuery('timespan'); //hour, day or week
+		$modified 	= $this->_get_timespan();
+		$ap_id      = $this->request->getQuery('ap_id');
+		
+		$req_q      = $this->request->getQuery();
+		$cloud_id 	= $req_q['cloud_id'];
+		
+		$id         = 1;
+		$q_ap       = $this->Aps->find()->contain(['ApProfiles.ApProfileEntries'=>'ApProfileEntrySchedules'])->where(['Aps.id' => $ap_id])->first();
+
+		if($q_ap){
+		
+            foreach($q_ap->ap_profile->ap_profile_entries as $apProfileEntry){
+            
+                if($ap_entry_id != -1){
+                    if($apProfileEntry->id != $ap_entry_id){
+                         continue; // Skip this iteration
+                    }
+                }
+
+                $apProfileEntryId   = $apProfileEntry->id;
+                $entryName          = $apProfileEntry->name;
+                
+		        if(count($apProfileEntry->ap_profile_entry_schedules) > 0){
+		        	$entryName     = $apProfileEntry->name.' <i class="fa  fa-calendar" style="color:#1272c7"></i>';
+		        }
+		        
+		        $apStations = $this->ApStations->find()
+                    ->select([
+                        'mac_address_id',
+                        'mac'   => 'MacAddresses.mac'
+                    ])
+                    ->distinct(['mac_address_id'])
+                    ->contain(['MacAddresses'])
+                    ->where([
+                        'ApStations.ap_profile_entry_id'=> $apProfileEntryId,
+                        'ApStations.modified >='        => $modified
+                    ])->all();
+               
+                $apStationLookup = [];  
+                  
+                foreach($apStations as $apStation){
+                    $mac_id = $apStation->mac_address_id;
+                    $apStationLookup[$mac_id] = $apStation->mac;
+                }
+                
+                if($this->timespan !== 'hour'){
+                     $apStationHourlies = $this->ApStationHourlies->find()
+                        ->select([
+                            'mac_address_id',
+                            'mac'   => 'MacAddresses.mac'
+                        ])
+                        ->distinct(['mac_address_id'])
+                        ->contain(['MacAddresses'])
+                        ->where([
+                            'ApStationHourlies.ap_profile_entry_id' => $apProfileEntryId,
+                            'ApStationHourlies.modified >='   => $modified
+                        ])->all();
+                    foreach($apStationHourlies as $apStationHourly){
+                        $mac_id = $apStationHourly->mac_address_id;
+                        $apStationLookup[$mac_id] = $apStationHourly->mac;
+                    }                       
+                }
+
+                if (count($apStationLookup) > 0 ) {
+                    foreach ($apStationLookup as $mac_address_id => $mac) {
+                    
+                        //==Get the sum of Bytes and avg of signal using the raw data== (for timespan == 'hour' )
+                        $t_bytes = 0;
+                        $r_bytes = 0;
+                        $q_t = $this->ApStations->find()
+                            ->select($this->fields)
+                            ->where([
+                                'mac_address_id'      => $mac_address_id,
+                                'ap_id'               => $ap_id,
+                                'ap_profile_entry_id' => $apProfileEntryId,
+                                'modified >='         => $modified
+                            ])
+                            ->first();                 
+                            
+                        if($q_t->signal_avg){
+
+                            $t_bytes    = $t_bytes + $q_t->tx_bytes;
+                            $r_bytes    = $r_bytes + $q_t->rx_bytes;
+                            $signal_avg = round($q_t->signal_avg);
+                            if ($signal_avg < -95) {
+                                $signal_avg_bar = 0.01;
+                            }
+                            if (($signal_avg >= -95)&($signal_avg <= -35)) {
+                                    $p_val = 95-(abs($signal_avg));
+                                    $signal_avg_bar = round($p_val/60, 1);
+                            }
+                            if ($signal_avg > -35) {
+                                $signal_avg_bar = 1;
+                            }
+                        }
+                        
+                        if($this->timespan !== 'hour'){
+                            $q_t_h = $this->ApStationHourlies->find()
+                                ->select($this->fields)
+                                ->where([
+                                    'mac_address_id'      => $mac_address_id,
+                                    'ap_id'               => $ap_id,
+                                    'ap_profile_entry_id' => $apProfileEntryId,
+                                    'modified >='         => $modified
+                                ])
+                                ->first();
+                                
+                            if($q_t_h->signal_avg){
+                            
+                                $t_bytes    = $t_bytes + $q_t_h->tx_bytes;
+                                $r_bytes    = $r_bytes + $q_t_h->rx_bytes;
+                                //-- Here we use the older ones for average
+                                $signal_avg = round($q_t_h->signal_avg);
+                                if ($signal_avg < -95) {
+                                    $signal_avg_bar = 0.01;
+                                }
+                                if (($signal_avg >= -95)&($signal_avg <= -35)) {
+                                        $p_val = 95-(abs($signal_avg));
+                                        $signal_avg_bar = round($p_val/60, 1);
+                                }
+                                if ($signal_avg > -35) {
+                                    $signal_avg_bar = 1;
+                                }
+                                
+                            }                  
+                        }
+
+	                	 $basic = [
+                            'id'                => $id,
+                            'name'              => $entryName,
+                            'ap_profile_entry_id'=> $apProfileEntryId,
+                            'mac'               => $mac,
+                            'mac_address_id'    => $mac_address_id,
+                            'vendor'            => $this->_lookup_vendor($mac),
+                            'tx_bytes'          => $t_bytes,
+                            'rx_bytes'          => $r_bytes,
+                            'signal_avg'        => $signal_avg ,
+                            'signal_avg_bar'    => $signal_avg_bar            
+                        ];
+                        	      	                		                	
+	                	$dead_after = $this->_get_dead_after($q_ap->ap_profile_id);	                	
+	                	$latestInfo = $this->_getLatsetApInfo($ap_id,$q_ap->ap_profile_id,$mac_address_id,$dead_after);                             
+                        $basic      = (array_merge($basic,$latestInfo));
+                        $mActions   = $this->_getMacActions($cloud_id,$q_ap->ap_profile_id,$mac_address_id);
+                        $basic      = (array_merge($basic,$mActions));            
+                        
+                                                                              
+                        array_push($items, $basic);
+                        $id++;
+                    }
+                }
+            }
+        }
+		 
+        $this->set([
+            'items' => $items,
+            'success' => true
+        ]);
+        $this->viewBuilder()->setOption('serialize', true);
+    }
 
 
     //---------- Private Functions --------------

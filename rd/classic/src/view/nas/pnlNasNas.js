@@ -251,13 +251,40 @@ Ext.define('Rd.view.nas.pnlNasNas', {
                     mouseWheelEnabled   : false
                 }, 
                 {
+                    xtype       : 'numberfield',
+                    fieldLabel  : 'Retries',
+                    name        : 'retries',
+                    value       : 0,
+                    maxValue    : 10,
+                    minValue    : 0,
+                    allowBlank  : false,
+                    minValue    : 0,
+                    hideTrigger : true,
+                    keyNavEnabled       : false,
+                    mouseWheelEnabled   : false
+                },
+                 {
+                    xtype       : 'numberfield',
+                    fieldLabel  : 'Timeout (seconds)',
+                    name        : 'timeout',
+                    value       : 1,
+                    maxValue    : 60,
+                    minValue    : 0,
+                    allowBlank  : false,
+                    minValue    : 0,
+                    hideTrigger : true,
+                    keyNavEnabled       : false,
+                    mouseWheelEnabled   : false
+                },
+                {
                     xtype       : 'checkbox',      
                     fieldLabel  : 'System Wide',
                     name        : 'for_system',
                     inputValue  : 'for_system',
                     hidden      : hide_system,
                     disabled    : hide_system
-                }  
+                },
+                  
             ]
         }
         

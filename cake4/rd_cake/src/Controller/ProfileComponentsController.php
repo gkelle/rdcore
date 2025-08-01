@@ -32,12 +32,12 @@ class ProfileComponentsController extends AppController {
             'sort_by' => 'ProfileComponents.name'
         ]);
         $this->loadComponent('Aa');
-        $this->loadComponent('GridButtonsFlat');
+        $this->loadComponent('GridButtonsRba');
         
         $this->loadComponent('JsonErrors'); 
         $this->loadComponent('TimeCalculations');
         
-        $this->loadComponent('Freeradius'); 
+        $this->loadComponent('Freeradius');
     }
     
     
@@ -220,7 +220,14 @@ class ProfileComponentsController extends AppController {
     }
     
     public function indexComp(){
-    //Returns a list of vendor attributes based on the tmpl_id query attribute.
+    
+    
+        $user = $this->_ap_right_check();
+        if (!$user) {
+            return;
+        }
+    
+        //Returns a list of vendor attributes based on the tmpl_id query attribute.
         $items 	= [];
         $req_q  = $this->request->getQuery(); //q_data is the query data  
         if(isset($req_q['comp_id'])){
@@ -267,6 +274,11 @@ class ProfileComponentsController extends AppController {
     }
     
     public function addComp(){
+    
+         $user = $this->_ap_right_check();
+        if (!$user) {
+            return;
+        }
     
     	$req_q  = $this->request->getQuery(); //q_data is the query data 
     	$req_d  = $this->request->getData(); //q_data is the query data 
@@ -322,6 +334,11 @@ class ProfileComponentsController extends AppController {
     }
     
      public function editComp(){
+     
+        $user = $this->_ap_right_check();
+        if (!$user) {
+            return;
+        }
      
      	$req_q  = $this->request->getQuery(); 
      	$req_d  = $this->request->getData();
@@ -436,6 +453,11 @@ class ProfileComponentsController extends AppController {
     }
     
     public function deleteComp(){
+    
+        $user = $this->_ap_right_check();
+        if (!$user) {
+            return;
+        }
 
         $fail_flag = true;
         $req_d  = $this->request->getData(); 
@@ -488,6 +510,11 @@ class ProfileComponentsController extends AppController {
     }
 
     public function index(){
+    
+        $user = $this->_ap_right_check();
+        if (!$user) {
+            return;
+        }
               
         $req_q    = $this->request->getQuery(); //q_data is the query data      
        	$cloud_id = $req_q['cloud_id'];
@@ -534,7 +561,7 @@ class ProfileComponentsController extends AppController {
 			$row['update']		= true;
 			$row['delete']		= true; 
             
-            array_push($items, $row);
+            $items[] = $row;
         }
 
         //___ FINAL PART ___
@@ -546,11 +573,23 @@ class ProfileComponentsController extends AppController {
         $this->viewBuilder()->setOption('serialize', true);
     }
 
-    public function add(){   
+    public function add(){
+    
+        $user = $this->_ap_right_check();
+        if (!$user) {
+            return;
+        }
+       
         $this->_addOrEdit('add');        
     }
     
-    public function edit(){    
+    public function edit(){
+    
+        $user = $this->_ap_right_check();
+        if (!$user) {
+            return;
+        }
+            
         $this->_addOrEdit('edit');      
     }
     
@@ -590,6 +629,12 @@ class ProfileComponentsController extends AppController {
 	}
 
     public function delete() {
+    
+        $user = $this->_ap_right_check();
+        if (!$user) {
+            return;
+        }
+    
 		if (!$this->request->is('post')) {
 			throw new MethodNotAllowedException();
 		}
@@ -615,9 +660,10 @@ class ProfileComponentsController extends AppController {
         if (!$user) {   //If not a valid user
             return;
         }
-
-        $menu = $this->GridButtonsFlat->returnButtons( false, 'basic');
         
+        $role  = $this->Aa->rights_on_cloud();      
+        $menu  = $this->GridButtonsRba->returnButtons($role);
+       
         $cmb_sqm_profiles = [
             'xtype'     => 'cmbProfileComponent',
             'margin'    => '5 0 5 0',

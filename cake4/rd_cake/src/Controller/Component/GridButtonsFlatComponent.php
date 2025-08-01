@@ -406,6 +406,59 @@ class GridButtonsFlatComponent extends Component {
             'ui'        => 'default'       
         ];                 
     }
+    
+    private function _getButtonsByTypeAndRights($type, $right='admin') {
+    
+        // Define the mapping of types, rights, and their associated methods
+        $typeRightsMapping = [
+         /*   'FirewallApps' => [
+                'admin' => '_fetchBasic',
+            ],*/
+
+            'FrAcctAndAuth' => [
+                'admin' => '_fetchReloadDelete',
+                'view'  => '_fetchReload'
+            ],
+            'PermanentUsers' => [
+                'admin' => function() {
+                    return [
+                        $this->_fetchBasic(true),
+                        $this->_fetchCsvUpDown(),
+                        $this->_fetchPermanentUserExtras(),
+                    ];
+                },
+                'view' => function() {
+                    return [
+                        'xtype' => 'buttongroup',
+                        'title' => $this->t,
+                        'items' => [
+                            $this->btnReloadTimer,
+                            $this->btnRadius,
+                            $this->btnGraph,
+                        ],
+                    ];
+                },
+            ],
+        ];
+
+        // Check if the combination exists and return the menu accordingly
+        if (isset($typeRightsMapping[$type][$right])) {
+            $handler = $typeRightsMapping[$type][$right];
+            
+            // If the handler is a callable (like a closure), call it
+            if (is_callable($handler)) {
+                return $handler();
+            }
+            
+            // Otherwise, assume it's a method name
+            $result = $this->$handler();
+            return is_array($result) ? $result : [$result];
+        }
+
+        // Return an empty array or a default value if type/right is not recognized
+        return [];
+    }
+
 
     public function returnButtons($title = true,$type='basic',$right='admin'){
         //First we will ensure there is a token in the request
@@ -452,12 +505,7 @@ class GridButtonsFlatComponent extends Component {
                 ]);
             $menu = [$b];
         }
-        
-         if($type == 'profiles'){
-            $b  = $this->_fetchProfiles();
-            $menu = [$b];
-        }
-        
+               
         if($type == 'DynamicClients'){      
             $shared_secret = "(Please specify one)";
             if(Configure::read('DynamicClients.shared_secret')){
@@ -506,22 +554,15 @@ class GridButtonsFlatComponent extends Component {
             $menu = [$b];
         }
         
-        if(($type == 'permanent_users')&&($right === 'admin')){
-            $a  = $this->_fetchBasic(true);
-            $b  = $this->_fetchCsvUpDown();                               
-            $c  = $this->_fetchPermanentUserExtras();
-            $menu = [$a,$b,$c];
-        }
+        //============================
+        if($type == 'PermanentUsers'){
+            $menu = $this->_getButtonsByTypeAndRights($type,$right);
+        } 
         
-        if(($type == 'permanent_users')&&($right === 'view')){
-            $a = ['xtype' => 'buttongroup', 'title' => $this->t, 'items' => [
-                $this->btnReloadTimer,
-                $this->btnRadius,
-                $this->btnGraph,
-            ]];
-            $menu = $a; 
+        if($type == 'FrAcctAndAuth'){
+            $menu = $this->_getButtonsByTypeAndRights($type,$right);    
         }
-        
+        //============================      
         
         if($type == 'DynamicClientMacs'){
         	$menu = [
@@ -555,13 +596,6 @@ class GridButtonsFlatComponent extends Component {
        	if($type == 'dynamic_translations'){
             $b = $this->_fetchDynamicTranslations();
             $menu = $b; 
-        }
-        
-        if($type == 'realms'){
-            $b  = $this->_fetchBasic();
-            $d  = $this->_fetchDocument();
-            $a  = $this->_fetchRealmExtras();
-            $menu = array($b,$d,$a);
         }
         
         if($type == 'Meshes'){
@@ -1096,36 +1130,7 @@ class GridButtonsFlatComponent extends Component {
         return $menu;    
       
     }
-        
-    private function _fetchProfiles(){
-    
-    	$edit = [
-            'xtype' 	=> 'splitbutton',   
-            'glyph' 	=> Configure::read('icnEdit'),    
-            'scale' 	=> $this->scale, 
-            'itemId' 	=> 'edit',      
-            'tooltip'	=> __('Edit'),
-            'ui'        => $this->btnUiEdit,
-            'menu'      => [
-                    'items' => [
-                        [ 'text'  => __('Simple Edit'),  	'itemId'    => 'simple', 	'group' => 'edit', 'checked' => true, 	'glyph' => Configure::read('icnEdit') ],
-                        [ 'text'  => __('FUP Edit'),   		'itemId'    => 'fup', 		'group' => 'edit' ,'checked' => false, 	'glyph' => Configure::read('icnHandshake')], 
-                        [ 'text'  => __('Advanced Edit'),   'itemId'    => 'advanced',	'group' => 'edit' ,'checked' => false, 	'glyph' => Configure::read('icnGears')],  
-                    ]
-            ]
-        ];
-    
-    	 $menu = ['xtype' => 'buttongroup','title' => $this->t, 'items' => [
-                $this->btnReload,
-                $this->btnAdd,
-                $this->btnDelete,
-				$edit,
-				$this->btnProfComp
-            ]
-        ];     
-        return $menu;  
-    }
-   
+          
   	private function _fetchBasic($with_reload_timer=false){       
         $menu 	= [];         
         $reload = $this->btnReload;     
@@ -1197,28 +1202,6 @@ class GridButtonsFlatComponent extends Component {
                 $this->btnEnable
             ]
         ];                    
-        return $menu;
-    }
-    
-       private function _fetchProfilesExtras(){
-       
-        $menu = [];      
-        if($this->title){
-            $t = __('Extra Actions');
-            $w = 150;
-        }else{
-            $t = null;
-            $w = 110;
-        }    
-	     $menu = [
-	        'xtype' => 'buttongroup',
-	        'title' => $t,
-	        'width' => $w,
-	        'items' => [
-	            $this->btnProfComp,
-	            $this->btnAdvancedEdit
-	        ]
-        ];    
         return $menu;
     }
     
@@ -1339,6 +1322,24 @@ class GridButtonsFlatComponent extends Component {
         ];
         return $menu;
     }
+    
+    private function _fetchReload(){
+        return [
+                ['xtype' => 'buttongroup','title' => null, 'items' => [
+                    $this->btnReload
+            ]] 
+        ];
+    }
+    
+    private function _fetchReloadDelete(){
+        return [
+                ['xtype' => 'buttongroup','title' => null, 'items' => [
+                   $this->btnReload,
+                   $this->btnDelete, 
+            ]] 
+        ];
+    }
+    
     
      private function _fetchPermanentUserExtras(){
         $menu = []; 
@@ -1484,47 +1485,7 @@ class GridButtonsFlatComponent extends Component {
         $menu = [$a,$b,$c];
         return $menu; 
     }
-    
-     private function _fetchRealmExtras(){
-        if($this->title){
-            $t = __('More');
-        }else{
-            $t = null;
-        } 
-    
-        $menu = array(
-            'xtype' => 'buttongroup',
-            'title' => $t, 
-            'items' => array(
-                $this->btnGraph,
-                [
-                    'xtype'     => 'button', 
-                    'glyph'     => Configure::read('icnCamera'),
-                    'scale'     => $this->scale, 
-                    'itemId'    => 'logo',     
-                    'tooltip'   => __('Edit logo')
-                ],
-                [
-                    'xtype'     => 'button', 
-                    'glyph'     => Configure::read('icnTag'),
-                    'scale'     => $this->scale, 
-                    'itemId'    => 'vlans',     
-                    'tooltip'   => __('Manage VLANs'),
-                    'ui'        => 'button-metal'
-                ],
-                [
-                    'xtype'     => 'button', 
-                    'glyph'     => Configure::read('icnLock'),
-                    'scale'     => $this->scale, 
-                    'itemId'    => 'pmks',     
-                    'tooltip'   => __('Manage PMKs'),
-                    'ui'        => 'button-metal'
-                ],
-            )
-        );             
-        return $menu;
-    }
-    
+       
     private function _fetchBasicMeshes(){
     
  

@@ -7,6 +7,8 @@ use Cake\Core\Configure\Engine\PhpConfig;
 use Cake\Utility\Inflector;
 use Cake\Mailer\Mailer;
 
+use Authorization\Exception\ForbiddenException;
+
 class PermanentUsersController extends AppController{
 
     public $base            = "Access Providers/Controllers/PermanentUsers/";
@@ -21,8 +23,10 @@ class PermanentUsersController extends AppController{
         $this->loadModel('Radaccts'); 
         $this->loadModel('RealmVlans'); 
                       
-        $this->loadComponent('Aa');
         $this->loadComponent('GridButtonsFlat');
+        
+        $this->loadComponent('GridButtonsRba');
+        
         $this->loadComponent('CommonQueryFlat', [ //Very important to specify the Model
             'model'     => 'PermanentUsers',
             'sort_by'   => 'PermanentUsers.username'
@@ -33,11 +37,11 @@ class PermanentUsersController extends AppController{
         $this->loadComponent('Formatter');
         $this->loadComponent('MailTransport');
         $this->loadComponent('RdLogger');
-        $this->loadComponent('IspPlumbing');
-        
-        $this->Authentication->allowUnauthenticated([ 'import']);        
+        $this->loadComponent('IspPlumbing');         
+        $this->Authentication->allowUnauthenticated([ 'import']); 
+             
     }
-
+    
     public function exportCsv(){
 
         $user = $this->_ap_right_check();
@@ -119,8 +123,9 @@ class PermanentUsersController extends AppController{
         if(!$user){
             return;
         }
+                                    
         $right    = $this->Aa->rights_on_cloud();
-
+        
       	$req_q    = $this->request->getQuery(); //q_data is the query data
         $cloud_id = $req_q['cloud_id'];
         $query 	  = $this->{$this->main_model}->find();      
@@ -142,6 +147,14 @@ class PermanentUsersController extends AppController{
         $total  = $query->count();       
         $q_r    = $query->all();
         $items  = [];
+        
+        $update = true;
+        $delete = true;
+        
+        if (isset($user['rba_allowed'])) {
+            $update = in_array('*', $user['rba_allowed']) || in_array('viewBasicInfo', $user['rba_allowed']);
+            $delete = in_array('*', $user['rba_allowed']) || in_array('delete', $user['rba_allowed']);
+        }
                 
         foreach($q_r as $i){
         
@@ -201,8 +214,8 @@ class PermanentUsersController extends AppController{
             if($right == 'view'){  
                 $actions_enabled = false;                  
             }             
-            $row['update']	= $actions_enabled;
-			$row['delete']  = $actions_enabled; 
+            $row['update']	= $update;
+			$row['delete']  = $delete; 
 			$row['extra']   = $actions_enabled; 
 			                  						
 			$row['vlan']    = 'Default VLAN';
@@ -306,6 +319,21 @@ class PermanentUsersController extends AppController{
             }
         }
         
+        //Set these fields to empty if they are not included
+        $not_null_fields = [
+            'name',
+            'surname',
+            'address',
+            'phone',
+            'email'       
+        ];
+        
+        foreach($not_null_fields as $j){
+             if(!isset($req_d[$j])){
+                $req_d[$j] = '';
+             }       
+        }
+        
         //The rest of the attributes should be same as the form..
         $entity = $this->{$this->main_model}->newEntity($req_d);
          
@@ -328,173 +356,195 @@ class PermanentUsersController extends AppController{
         }      
     }
     
-    public function import(){
+    public function importZZ(){
+
+        if ($this->request->is('post')) {
+            $file = $this->request->getData('csv_file');
+            if ($file && $file->getError() === UPLOAD_ERR_OK) {
+                $filename = $file->getClientFilename();
+                //$file->moveTo(WWW_ROOT . 'uploads' . DS . $filename);
+                $this->set([
+                    'success' => true,
+                    'message' => 'Upload complete'
+                ]);
+            } else {
+                $this->set([
+                    'success' => false,
+                    'message' => 'Upload failed: ' . $file->getError()
+                ]);
+            }
+        }
+        $this->viewBuilder()->setOption('serialize', ['success', 'message']);
+    }
+
     
+    public function import(){
+
         $user = $this->_ap_right_check();
-        if(!$user){
+        if (!$user) {
             return;
         }
-        
+
         $c_l        = Configure::read('language.default');
-        $c_l        = explode( '_', $c_l);
+        $c_l        = explode('_', $c_l);
         $country    = $c_l[0];
         $language   = $c_l[1];
         $cloud_id   = $this->request->getData('cloud_id');                
-        $tmpName    = $_FILES['csv_file']['tmp_name'];
-        $csvAsArray = array_map('str_getcsv', file($tmpName)); 
-        $user_list  = [];
+        //$tmpName    = $_FILES['csv_file']['tmp_name'];
         
-               
-        foreach ($csvAsArray as $index => $row) { 
-            if(($index == 0)&&($row[0] == 'username')){ //Skip the first line if start with username
-                continue; 
-            }
-            $row_data =  $this->_testCsvRow($row);       
-            if($row_data){    
-                //Add user
-                $row_data['cloud_id']    = $cloud_id;
-                $row_data['language_id'] = $language;
-                $row_data['country_id']  = $country; 
-                $row_data['active']      = 1;                
-                //print_r($row_data);
-                $entity = $this->{'PermanentUsers'}->newEntity($row_data);
-                if($this->{'PermanentUsers'}->save($entity)){ //after the fact
-                    if($row_data['auto_mac'] === true){
-                        $this->{'PermanentUsers'}->setAutoMac($entity->username,true);
-                    }
-                }                  
-            }        
+        $file       = $this->request->getData('csv_file');
+        $filename   = $file->getClientFilename();
+        if(!$filename){
+            $this->set([
+                'success' => false,
+                'message' => 'Unable to open CSV file.'
+            ]);
+            $this->viewBuilder()->setOption('serialize', true);
+            return;
+        
         }
-          
+                      
+        $tmpName = WWW_ROOT . 'files' . DS . 'imagecache'. DS . 'users.csv';
+        if (file_exists($tmpName)) {
+            $this->set([
+                'success' => false,
+                'message' => 'A user import is already in progress. Please wait.'
+            ]);
+            $this->viewBuilder()->setOption('serialize', ['success', 'message']);
+            return;
+        }
+        
+        
+        $file->moveTo($tmpName);        
+        $cmd = sprintf(
+            "%s/bin/cake import_users %s %d %s %s > /dev/null 2>&1 &",
+            ROOT,
+            escapeshellarg($tmpName),
+            $cloud_id,
+            escapeshellarg($language),
+            escapeshellarg($country)
+        );
+        exec($cmd);
+        
         $this->set([
-            'success' => true
+            'success' => true,
+            'message' => 'Import started in background.'
         ]);
-        $this->viewBuilder()->setOption('serialize', true);      
+        $this->viewBuilder()->setOption('serialize', ['success', 'message']);
+
     }
-    
-    private function _testCsvRow($row){
-         
-        $row_data   = [];
-        $username   = $row[0];
-        $password   = $row[1];
-        $realm      = $row[2];
-        $profile    = $row[3];
-        
-        $row_data['name']     = $row[4];
-        $row_data['surname']  = $row[5]; 
-              
-        $static_ip  = $row[6];
-        
-        $row_data['site']   = $row[7];
-         
-        $ppsk       = $row[8];
-        $vlan       = $row[9];
-        $auto_mac   = $row[10];
-         
-               
-        if (!isset($username) || strlen($username) < 2) {
-            return false;
+       
+    private function _testCsvRow(array $row){
+
+        if (empty($row[0]) || strlen($row[0]) < 2) {
+            return false; // Invalid username
         }
-        
-        if (!isset($password) || strlen($password) < 4) {
-            return false;
+
+        if (empty($row[1]) || strlen($row[1]) < 4) {
+            return false; // Invalid password
         }
-        
-        $row_data['username']    = $username;
-        $row_data['password']    = $password;
-                            
-        if (($realm !== null)&&(strlen($realm) >= 1)) {
-            $r_data['realm']        = $realm;
-            $realm_entity           = $this->Realms->entityBasedOnPost($r_data);
-            if($realm_entity){
-                $row_data['realm']   = $realm_entity->name;
-                $row_data['realm_id']= $realm_entity->id;
-                
-                //Test to see if we need to auto-add a suffix
-                $suffix                 =  $realm_entity->suffix; 
-                $suffix_permanent_users = $realm_entity->suffix_permanent_users;
-                
-                //Auto populate the email field if it looks like the username is an email address
-                if (filter_var($row_data['username'], FILTER_VALIDATE_EMAIL)) {
-                    $row_data['email'] = $row_data['username'];
-                }
-                            
-                if(($suffix != '')&&($suffix_permanent_users)){
-                    $row_data['username'] = $row_data['username'].'@'.$suffix;
-                }
-            }else{
+
+        [$username, $password, $realm, $profile, $name, $surname, $static_ip, $site, $ppsk, $vlan, $extra_name, $extra_value, $auto_mac] = array_pad($row, 13, null);
+
+        $row_data = [
+            'username' => $username,
+            'password' => $password,
+            'name'     => $name,
+            'surname'  => $surname,
+            'site'     => $site,
+            'auto_mac' => ($auto_mac === 'true')
+        ];
+
+        // Realm processing
+        if (!empty($realm)) {
+            $realm_entity = $this->Realms->entityBasedOnPost(['realm' => $realm]);
+            if (!$realm_entity) {
                 return false;
-            }       
-        }  
-        
-        if (($profile !== null)&&(strlen($profile) >= 1)) {
-            $p_data['profile']  = $profile;
-            $profile_entity     = $this->Profiles->entityBasedOnPost($p_data);
-            if($profile_entity){
-                $row_data['profile']   = $profile_entity->name;
-                $row_data['profile_id']= $profile_entity->id;
-            }else{
-                return false;
-            }       
+            }
+
+            $row_data['realm']    = $realm_entity->name;
+            $row_data['realm_id'] = $realm_entity->id;
+
+            if (filter_var($username, FILTER_VALIDATE_EMAIL)) {
+                $row_data['email'] = $username;
+            }
+
+            if (!empty($realm_entity->suffix) && $realm_entity->suffix_permanent_users) {
+                $row_data['username'] .= '@' . $realm_entity->suffix;
+            }
         }
-        
-        if(isset($static_ip) && strlen($static_ip) >= 1){
+
+        // Profile processing
+        if (!empty($profile)) {
+            $profile_entity = $this->Profiles->entityBasedOnPost(['profile' => $profile]);
+            if (!$profile_entity) {
+                return false;
+            }
+
+            $row_data['profile']    = $profile_entity->name;
+            $row_data['profile_id'] = $profile_entity->id;
+        }
+
+        // Static IP validation
+        if (!empty($static_ip)) {
             if (!filter_var($static_ip, FILTER_VALIDATE_IP)) {
                 return false;
-            }else{
-                $row_data['static_ip']  = $static_ip;
+            }
+            $row_data['static_ip'] = $static_ip;
+        }
+
+        // PPSK
+        if (!empty($ppsk) && strlen($ppsk) >= 8) {
+            $row_data['ppsk'] = $ppsk;
+        }
+
+        // VLAN processing
+        if (!empty($vlan)) {
+            if ($vlan === 'next_available') {
+                $r_vlans = $this->RealmVlans->find()
+                    ->where(['RealmVlans.realm_id' => $row_data['realm_id']])
+                    ->contain(['PermanentUsers'])
+                    ->order(['vlan' => 'ASC'])
+                    ->all();
+
+                foreach ($r_vlans as $v) {
+                    if (empty($v->permanent_users)) {
+                        $row_data['realm_vlan_id'] = $v->id;
+                        break;
+                    }
+                }
+
+                if (empty($row_data['realm_vlan_id'])) {
+                    return false;
+                }
+            } elseif (is_numeric($vlan)) {
+                $r_vlan = $this->RealmVlans->find()
+                    ->where([
+                        'RealmVlans.realm_id' => $row_data['realm_id'],
+                        'RealmVlans.vlan'     => $vlan
+                    ])
+                    ->first();
+
+                if (!$r_vlan) {
+                    return false;
+                }
+
+                $row_data['realm_vlan_id'] = $r_vlan->id;
             }
         }
-        
-        if(isset($ppsk) && strlen($ppsk) >= 8){
-            $row_data['ppsk']  = $ppsk;    
+
+        // Optional extra fields
+        if (isset($extra_name)) {
+            $row_data['extra_name'] = $extra_name;
         }
-        
-        //--Special keyword--
-        if(isset($vlan) && $vlan == 'next_available'){
-            $r_vlans = $this->{'RealmVlans'}->find()
-                        ->where(['RealmVlans.realm_id' =>$row_data['realm_id']])
-                        ->contain(['PermanentUsers'])
-                        ->order(['vlan' => 'ASC'])
-                        ->all();
-            if($r_vlans){
-                $found_one = false;         
-                foreach($r_vlans as $v){
-                    if ($v->permanent_users === []) { //Give it the next in line
-                        $row_data['realm_vlan_id']  = $v->id;
-                        $found_one = true;
-                        break;
-                    }                 
-                }
-                if(!$found_one){
-                    return false; //skip it if we could not find a VLAN
-                }                     
-            }else{
-                return false;
-            }                 
+
+        if (isset($extra_value)) {
+            $row_data['extra_value'] = $extra_value;
         }
-        
-        //--Normal VLAN--
-        if(isset($vlan) && is_numeric($vlan)){
-            $r_vlan = $this->{'RealmVlans'}->find()
-                        ->where(['RealmVlans.realm_id' =>$row_data['realm_id'], 'RealmVlans.vlan' => $vlan])
-                        ->first();
-            if($r_vlan){     
-              $row_data['realm_vlan_id']  = $r_vlan->id;             
-            }else{
-                return false;
-            }                 
-        }
-        
-        //Auto MAC
-        $row_data['auto_mac']  = false;
-        if(isset($auto_mac) && ($auto_mac === 'true')){
-            $row_data['auto_mac']  = true;
-        }       
-             
-        //It made it to the end              
-        return $row_data;   
+
+        return $row_data;
     }
+
     
     public function delete() {
     
@@ -1065,29 +1115,31 @@ class PermanentUsersController extends AppController{
    
     public function menuForGrid(){
     
-    	$user = $this->_ap_right_check();
-        if(!$user){
+    	$user = $this->Aa->user_for_token($this);
+        if(!$user){   //If not a valid user
             return;
         }
-        $right = $this->Aa->rights_on_cloud();
-             
-        $menu = $this->GridButtonsFlat->returnButtons(false,'permanent_users',$right);
-        $this->set(array(
-            'items'         => $menu,
-            'success'       => true
-        ));
+        
+        $role  = $this->Aa->rights_on_cloud(); 
+        //print_r($role);
+        //$role  = 'admin';           
+        $menu   = $this->GridButtonsRba->returnButtons($role);
+        $this->set([
+            'items'     => $menu,
+            'success'   => true
+        ]);
         $this->viewBuilder()->setOption('serialize', true);
     }
 
     function menuForUserDevices(){
     
-    	$user = $this->_ap_right_check();
-        if(!$user){
+    	$user = $this->Aa->user_for_token($this);
+        if(!$user){   //If not a valid user
             return;
         }
     
         $settings = ['listed_only' => false,'add_mac' => false];
-        
+       
         $req_q    = $this->request->getQuery();
 
         if(isset($req_q['username'])){
@@ -1096,62 +1148,75 @@ class PermanentUsersController extends AppController{
         }
 
         //Empty by default
-        $menu = array(
-                array('xtype' => 'buttongroup','title' => false, 'items' => array(
-                    array( 'xtype'=>  'button', 'glyph'   => Configure::read('icnReload'), 'scale' => 'large', 'itemId' => 'reload',   'tooltip'   => __('Reload'),'ui' => 'button-orange'),
-                    array( 
+        $menu = [
+            [
+                'xtype' => 'buttongroup',
+                'title' => false, 
+                'items' => [
+                    [ 
+                        'xtype'     =>  'button', 
+                        'glyph'     => Configure::read('icnReload'), 
+                        'scale'     => 'large', 
+                        'itemId'    => 'reload',   
+                        'tooltip'   => __('Reload'),
+                        'ui'        => 'button-orange'
+                    ],
+                    [ 
                         'xtype'         => 'checkbox', 
                         'boxLabel'      => 'Connect only from listed devices', 
                         'itemId'        => 'chkListedOnly',
                         'checked'       => $settings['listed_only'], 
                         'cls'           => 'lblRd',
                         'margin'        => 0
-                    ),
-                    array( 
+                    ],
+                    [ 
                         'xtype'         => 'checkbox', 
                         'boxLabel'      => 'Auto-add device after authentication', 
                         'itemId'        => 'chkAutoAddMac',
                         'checked'       => $settings['add_mac'], 
                         'cls'           => 'lblRd',
                         'margin'        => 0
-                    )
-            )) 
-        );
+                    ]
+                ]
+            ] 
+        ];
 
-        $this->set(array(
-            'items'         => $menu,
-            'success'       => true
-        ));
+        $this->set([
+            'items'     => $menu,
+            'success'   => true
+        ]);
         $this->viewBuilder()->setOption('serialize', true);
     }
 
     function menuForAccountingData(){
     
-    	$user = $this->_ap_right_check();
-        if(!$user){
+    	$user = $this->Aa->user_for_token($this);
+        if(!$user){   //If not a valid user
             return;
         }
-
-        $menu = $this->GridButtonsFlat->returnButtons(false,'fr_acct_and_auth');
-        $this->set(array(
-            'items'         => $menu,
-            'success'       => true
-        ));
+        
+        $right  = $this->Aa->rights_on_cloud();
+        $menu = $this->GridButtonsFlat->returnButtons(false,'FrAcctAndAuth',$right);
+        $this->set([
+            'items'     => $menu,
+            'success'   => true
+        ]);
         $this->viewBuilder()->setOption('serialize', true);
     }
 
     function menuForAuthenticationData(){
     
-    	$user = $this->_ap_right_check();
-        if(!$user){
+    	$user = $this->Aa->user_for_token($this);
+        if(!$user){   //If not a valid user
             return;
         }
-      
-        $menu = $this->GridButtonsFlat->returnButtons(true,'fr_acct_and_auth');
-        $this->set(array(
-            'items'         => $menu,
-            'success'       => true
-        ));
+        
+        $right  = $this->Aa->rights_on_cloud();
+        $menu   = $this->GridButtonsFlat->returnButtons(true,'FrAcctAndAuth',$right);
+        $this->set([
+            'items'     => $menu,
+            'success'   => true
+        ]);
         $this->viewBuilder()->setOption('serialize', true);
     }
 }

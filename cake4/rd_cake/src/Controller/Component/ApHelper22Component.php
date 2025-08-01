@@ -19,9 +19,10 @@ use Cake\I18n\Time;
 
 class ApHelper22Component extends Component {
 
-	protected $components 	= ['Firewall','MdFirewall','AccelPpp', 'Sqm','Connection'];
+	protected $components 	= ['Firewall','MdFirewall','AccelPpp', 'Sqm','Connection', 'Passpoint'];
     protected $main_model   = 'Aps';
-    protected $ApId     = '';
+    protected $ApId         = '';
+    protected $ApEntity     = '';
 	protected $Hardware = 'creatcomm_ta8h'; //Some default value
 	protected $Power	= '10'; //Some default
     protected $RadioSettings = [];
@@ -44,6 +45,8 @@ class ApHelper22Component extends Component {
     protected $wbw_settings     = [];
     protected $wan_settings     = [];
     protected $reboot_setting   = [];
+    
+    protected $files            = [];
     
     protected $ppsk_flag		= false;
     protected $private_psks     = [];
@@ -87,14 +90,14 @@ class ApHelper22Component extends Component {
                 $this->ApId     = $ent_ap->id;
                 $this->Mac      = $mac;
 				$this->Hardware	= $ent_ap->hardware;
-				
+				$this->ApEntity = $ent_ap;
+								
 				$this->MetaData             = [];
 		        $this->MetaData['mode']     = 'ap';
 		        $this->MetaData['mac']      = $mac;
 		        $this->MetaData['ap_id']    = $this->ApId;
 		        $this->MetaData['node_id']  = $this->ApId; //Add this to keep the firmware simple and backward compatible
-		        
-		        
+		        		        
 		        $this->_update_wbw_channel(); //Update the wbw channel if it is included
 		        
                 $query = $this->{$this->main_model}->find()->contain([
@@ -249,6 +252,11 @@ class ApHelper22Component extends Component {
         //===WbW=====   
         if($this->wbw_settings){  
             $json['config_settings']['web_by_wifi'] = $this->wbw_settings;
+        }
+        
+        //==== Files ====
+        if($this->files){
+            $json['config_settings']['files'] = $this->files;
         }
         
         //==Reboot Settings====
@@ -650,7 +658,7 @@ class ApHelper22Component extends Component {
                     
                     
                     if($exit_id == $wan_bridge_id){
-                        array_push($interfaces,$br_int);    
+                        array_push($interfaces,$this->br_int);    
                     }
                     
                     $nat_bridge = [
@@ -703,7 +711,7 @@ class ApHelper22Component extends Component {
                             $current_interfaces = array_merge($interfaces,$this->_lan_for($this->Hardware));
                         }
                         if($exit_id == $wan_bridge_id){
-                            array_push($interfaces,$br_int);    
+                            array_push($interfaces,$this->br_int);    
                         }
                         
                         array_push($network,
@@ -887,7 +895,7 @@ class ApHelper22Component extends Component {
                  //____ LAYER 3 Tagged Bridge ____
                 if($type == 'tagged_bridge_l3'){
 
-                    $interfaces     = [$br_int.'.'.$ap_profile_e['vlan']];  //We only do eth0
+                    $interfaces     = [$this->br_int.'.'.$ap_profile_e['vlan']];  //We only do eth0
                     $exit_point_id  = $ap_profile_e['id'];
 
                     $this->l3_vlans[$exit_point_id] = $if_name;
@@ -896,7 +904,7 @@ class ApHelper22Component extends Component {
                             [
                                 "interface"    => "$if_name",
                                 "options"   => [
-                                    'ifname'    => $br_int,
+                                    'ifname'    => $this->br_int,
                                     'type'      => '8021q',
                                     'proto'     => 'dhcp',
                                     'vid'       => $ap_profile_e['vlan']
@@ -905,7 +913,7 @@ class ApHelper22Component extends Component {
                     }
                     if($ap_profile_e['proto'] == 'static'){
                         $options = [
-                            'ifname'    => $br_int,
+                            'ifname'    => $this->br_int,
                             'type'      => '8021q',
                             'proto'     => $ap_profile_e['proto'],
                             'ipaddr'    => $ap_profile_e['ipaddr'],
@@ -1432,10 +1440,9 @@ class ApHelper22Component extends Component {
                                 $lists = [];
                                 
                                	if($ap_profile_e->hotspot2_enable){
-                                	Configure::load('Hotspot2');
-								    $options = Configure::read('Hotspot2.options'); 
+								    $options    = $this->Passpoint->getOptions($ap_profile_e->passpoint_profile_id);
 								    $base_array = array_merge($base_array,$options);
-								    $lists	 = Configure::read('Hotspot2.lists');                                  
+								    $lists	    = $this->Passpoint->getLists($ap_profile_e->passpoint_profile_id);                                  
                                 }
                                 
                                 //Check if we need to mix in the RADIUS items
@@ -1640,10 +1647,9 @@ class ApHelper22Component extends Component {
                     $lists = [];
                     
                    	if($ap_profile_e->hotspot2_enable){
-                    	Configure::load('Hotspot2');
-					    $options = Configure::read('Hotspot2.options'); 
+					    $options    = $this->Passpoint->getOptions($ap_profile_e->passpoint_profile_id);
 					    $base_array = array_merge($base_array,$options);
-					    $lists	 = Configure::read('Hotspot2.lists');                                  
+					    $lists	    = $this->Passpoint->getLists($ap_profile_e->passpoint_profile_id);                                  
                     }
                     
                     //Check if we need to mix in the RADIUS items                    
@@ -1698,6 +1704,8 @@ class ApHelper22Component extends Component {
         return($dictionary[$number]);
     }     
 
+    //--This moved to the ConnectionComponent--
+    
     private function _wan_for($hw){
 		$return_val = 'eth0'; //some default	
 		$q_e = $this->{'Hardwares'}->find()->where(['Hardwares.fw_id' => $hw, 'Hardwares.for_ap' => true])->first();
@@ -1709,18 +1717,23 @@ class ApHelper22Component extends Component {
 		if($return_val == 'eth0 eth1'){
 		    $return_val = 'lan';
 		    $this->vlan_hack = true;
+		}else{		
+		    $ports = preg_split('/\s+/', $q_e->wan);//New format if there are multiple items
+		    if($ports){
+		        $return_val = $ports;
+		    }		
 		}
-		//--
-		
+		//--		
 		return $return_val;
 	}
+	
 	
 	private function _lan_for($hw){
 	    $return_val = ['eth1']; //some default	
 		$q_e = $this->{'Hardwares'}->find()->where(['Hardwares.fw_id' => $hw, 'Hardwares.for_ap' => true])->first();
 		if($q_e){
 		    $return_val = [$q_e->lan]; 
-		    $ports = preg_split('/\s+/', $q_e->lan);//New format if there are multiple items
+		    $ports      = preg_split('/\s+/', $q_e->lan);//New format if there are multiple items
 		    if($ports){
 		    	$return_val = $ports; 
 		    } 
@@ -1733,7 +1746,8 @@ class ApHelper22Component extends Component {
         $ret_data                   = [];
         $ret_data['two_replace']    = false;
         $ret_data['five_replace']   = false;
-        $unix_start                 = 1; //Anything will be gigger than one    
+        $unix_start                 = 1; //Anything will be gigger than one
+        $ent_flag                   = false;  
         
         $e_s = $this->{'ApConnectionSettings'}->find()->where([
                 'ApConnectionSettings.ap_id'    => $this->ApId
@@ -1741,7 +1755,10 @@ class ApHelper22Component extends Component {
         
         foreach($e_s as $acs){
         
-            if($acs->grouping == 'wbw_setting'){
+            if(
+            ($acs->grouping == 'wbw_setting')||
+            ($acs->grouping == 'wifi_ent_setting') //Added WPA-Enterprise and Passpoint Jul-2025
+            ){
                 $this->wbw_settings['proto'] = 'dhcp'; //default 
             }
             
@@ -1750,9 +1767,18 @@ class ApHelper22Component extends Component {
             }
             if($acs->grouping == 'wifi_pppoe_setting'){
                 $this->wbw_settings['proto'] = 'pppoe'; 
-            }         
+            }
+            
+            if($acs->grouping == 'wifi_ent_setting'){
+                $ent_flag = true; 
+            }        
         
-            if(($acs->grouping == 'wbw_setting')||($acs->grouping == 'wifi_static_setting')||($acs->grouping == 'wifi_pppoe_setting')){ 
+            if(
+            ($acs->grouping == 'wbw_setting')||
+            ($acs->grouping == 'wifi_static_setting')||
+            ($acs->grouping == 'wifi_pppoe_setting')||
+            ($acs->grouping == 'wifi_ent_setting') //Added WPA-Enterprise and Passpoint Jul-2025
+            ){ 
                 if($acs->value !== ''){
                     $this->wbw_settings[$acs->name] = $acs->value;
                 }
@@ -1768,6 +1794,103 @@ class ApHelper22Component extends Component {
                 }
             }
         }
+        
+        if($ent_flag == true){
+            $this->PasspointUplinks  = TableRegistry::get('PasspointUplinks');
+            $passpoint_uplink_id     =  $this->ApEntity->passpoint_uplink_id;
+            $link   = $this->PasspointUplinks->find()->where(['PasspointUplinks.id' => $passpoint_uplink_id ])->first();
+            if($link){
+                if($link->connection_type == 'wpa_enterprise'){
+                    $this->wbw_settings['ssid'] = $link->ssid;                
+                }
+                if($link->connection_type == 'passpoint'){
+                    $this->wbw_settings['ssid'] = '_Passpoint'; //Dummy SSID 
+                    $this->wbw_settings['iw_enabled'] = '1';
+	                $this->wbw_settings['ieee80211w'] = '1';
+	                if($link->rcoi !== ''){
+	                    $this->wbw_settings['iw_rcois'] = $link->rcoi;
+	                }
+	                if($link->nai_realm !== ''){
+	                    $this->wbw_settings['iw_realm'] = $link->nai_realm;
+	                }              
+                }
+                
+                $this->wbw_settings['encryption']         = $link->encryption;
+                $this->wbw_settings['ca_cert_usesystem']  = $link->ca_cert_usesystem;
+                if($link->domain_suffix_match !== ''){ 
+                    $domainInput = $link->domain_suffix_match;
+                    // Convert to array
+                    $domains = array_map('trim', explode(',', $domainInput));
+                    // Filter out any empty strings (e.g., from accidental double commas)
+                    $domains = array_filter($domains);
+                    // Reindex the array (optional but clean)
+                    $domains = array_values($domains);
+                    //$this->wbw_settings['lists']['domain_suffix_match'] = $domains; //FIXME For later
+                    $this->wbw_settings['domain_suffix_match'] = $link->domain_suffix_match;            
+                }
+                           
+                if($link->ca_cert_usesystem){
+                    $this->wbw_settings['ca_cert_usesystem']= '1';
+                }
+                
+                if(!$link->ca_cert_usesystem){
+                    $this->wbw_settings['ca_cert'] = '/etc/ssl/certs/ca_cert_'.$link->id.'.pem';
+                    //Also add it to the files  
+                    $this->files[] = [
+                        'name'      => '/etc/ssl/certs/ca_'.$link->id.'.pem',
+                        'value'     => $link->ca_cert,
+                        'md5sum'    => md5($link->ca_cert)
+                    ];
+                }
+                
+                
+                //Then credentials
+                if($link->eap_method == 'ttls_pap'){
+                    $this->wbw_settings['anonymous_identity'] = $link->anonymous_identity;
+                    $this->wbw_settings['identity']           = $link->identity;
+                    $this->wbw_settings['password']           = $link->password;
+                    $this->wbw_settings['eap_type']           = 'ttls';
+                    $this->wbw_settings['auth']               = 'PAP';               
+                }
+                
+                if($link->eap_method == 'ttls_mschap'){
+                    $this->wbw_settings['anonymous_identity'] = $link->anonymous_identity;
+                    $this->wbw_settings['identity']           = $link->identity;
+                    $this->wbw_settings['password']           = $link->password;
+                    $this->wbw_settings['eap_type']           = 'ttls';
+                    $this->wbw_settings['auth']               = 'MSCHAPV2';               
+                }
+                
+                if($link->eap_method == 'peap'){
+                 //   $this->wbw_settings['anonymous_identity'] = $link->anonymous_identity; //is this needed with peap?
+                    $this->wbw_settings['identity']           = $link->identity;
+                    $this->wbw_settings['password']           = $link->password;
+                    $this->wbw_settings['eap_type']           = 'peap';
+                    $this->wbw_settings['auth']               = 'MSCHAPV2';               
+                }    
+                              
+                if($link->eap_method == 'tls'){
+                    $this->wbw_settings['identity']    = $link->anonymous_identity;
+                    $this->wbw_settings['client_cert'] = '/etc/ssl/certs/client_cert_'.$link->id.'.pem';
+                    //Also add it to the files  
+                    $this->files[] = [
+                        'name'      => '/etc/ssl/certs/client_cert_'.$link->id.'.pem',
+                        'value'     => $link->client_cert,
+                        'md5sum'    => md5($link->client_cert)
+                    ];
+                    
+                    $this->wbw_settings['private_key'] = '/etc/ssl/certs/private_key_'.$link->id.'.pem';
+                    //Also add it to the files  
+                    $this->files[] = [
+                        'name'      => '/etc/ssl/certs/private_key_'.$link->id.'.pem',
+                        'value'     => $link->private_key,
+                        'md5sum'    => md5($link->private_key)
+                    ];           
+                } 
+                              
+            }               
+        }
+        
         return $ret_data;
     }
     

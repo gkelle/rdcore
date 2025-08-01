@@ -28,7 +28,9 @@ class DataCollectorsController extends AppController{
         $this->loadComponent('TimeCalculations');
         $this->loadComponent('Otp');
         $this->loadComponent('RdSms'); 
-        $this->loadComponent('Formatter');         
+        $this->loadComponent('Formatter');
+        
+        $this->Authentication->allowUnauthenticated(['macCheck','addMac','otpSubmit','otpRequest','otpConfirm']);         
     }
     
     public function macCheck(){

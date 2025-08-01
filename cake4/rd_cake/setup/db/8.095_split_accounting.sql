@@ -5,6 +5,9 @@ delimiter //
 create procedure split_accounting()
 begin
 
+-- Declare variables at the beginning
+DECLARE index_exists INT DEFAULT 0;
+
 
 if not exists (select * from information_schema.columns
     where table_name = 'radacct_history' and table_schema = 'rd') then
@@ -13,6 +16,14 @@ if not exists (select * from information_schema.columns
     INSERT INTO radacct_history SELECT * FROM radacct;
 
 end if;
+
+SELECT COUNT(*)INTO index_exists FROM information_schema.statistics WHERE table_schema = 'rd' AND table_name = 'radacct_history' AND index_name = 'acctuniqueid';
+
+-- If the index exists, drop it
+IF index_exists > 0 THEN
+    ALTER TABLE radacct_history DROP INDEX acctuniqueid;
+END IF;
+
 
 end//
 

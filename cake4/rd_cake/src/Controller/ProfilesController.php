@@ -47,10 +47,10 @@ class ProfilesController extends AppController
             'model' => 'Profiles'
         ]);
         $this->loadComponent('Aa');
-        $this->loadComponent('GridButtonsFlat');
+        $this->loadComponent('GridButtonsRba');
              
         $this->loadComponent('JsonErrors'); 
-        $this->loadComponent('TimeCalculations');  
+        $this->loadComponent('TimeCalculations');
     }
 
     public function indexAp(){
@@ -110,6 +110,11 @@ class ProfilesController extends AppController
 
     public function index(){
     
+        $user = $this->_ap_right_check();
+        if (!$user) {
+            return;
+        }
+    
     	$req_q    = $this->request->getQuery(); //q_data is the query data      
        	$cloud_id = $req_q['cloud_id'];
         $query 	  = $this->{$this->main_model}->find();      
@@ -132,6 +137,15 @@ class ProfilesController extends AppController
         $total 	= $query->count();
         $q_r 	= $query->all();
         $items 	= [];
+        
+        $update = true;
+        $delete = true;
+        
+        if (isset($user['rba_allowed'])) {
+            $update = in_array('*', $user['rba_allowed']) || in_array('manageComponents', $user['rba_allowed']) || in_array('simpleView', $user['rba_allowed']) || in_array('fupView', $user['rba_allowed']);
+            $delete = in_array('*', $user['rba_allowed']) || in_array('delete', $user['rba_allowed']);
+        }
+
 
         foreach ($q_r as $i) {
 
@@ -166,8 +180,8 @@ class ProfilesController extends AppController
                 'profile_components'    => $components,
                 'data_cap_in_profile'   => $data_cap_in_profile,
                 'time_cap_in_profile'   => $time_cap_in_profile,
-                'update'                => true,
-                'delete'                => true
+                'update'                => $update,
+                'delete'                => $delete
             ));
         }
 
@@ -256,6 +270,12 @@ class ProfilesController extends AppController
 	}
 	  
     public function delete($id = null) {
+    
+        $user = $this->_ap_right_check();
+        if(!$user){
+            return;
+        }
+    
 		if (!$this->request->is('post')) {
 			throw new MethodNotAllowedException();
 		}
@@ -295,6 +315,11 @@ class ProfilesController extends AppController
 	
 	//== SIMPLE ITEMS ==
 	public function simpleAdd(){
+	
+	    $user = $this->_ap_right_check();
+        if(!$user){
+            return;
+        }
 	
 	    if (!$this->request->is('post')) {
 			throw new MethodNotAllowedException();
@@ -378,6 +403,11 @@ class ProfilesController extends AppController
 	}
 	
 	public function simpleEdit(){
+	
+	    $user = $this->_ap_right_check();
+        if(!$user){
+            return;
+        }
 	
 	    if (!$this->request->is('post')) {
 			throw new MethodNotAllowedException();
@@ -601,6 +631,12 @@ class ProfilesController extends AppController
 	
 	public function fupEdit(){
 	
+	    //__ Authentication + Authorization __
+        $user = $this->_ap_right_check();
+        if(!$user){
+            return;
+        }
+	
 	    if (!$this->request->is('post')) {
 			throw new MethodNotAllowedException();
 		}
@@ -770,8 +806,11 @@ class ProfilesController extends AppController
         if (!$user) {   //If not a valid user
             return;
         }
-
-        $menu = $this->GridButtonsFlat->returnButtons(false, 'profiles'); 
+        
+        $role  = $this->Aa->rights_on_cloud(); 
+        //print_r($role);
+        //$role  = 'admin';           
+        $menu   = $this->GridButtonsRba->returnButtons($role);
         $this->set([
             'items' => $menu,
             'success' => true

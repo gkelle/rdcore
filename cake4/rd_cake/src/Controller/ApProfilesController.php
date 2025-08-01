@@ -6,6 +6,7 @@ use Cake\Core\Configure;
 use Exception;
 use GeoIp2\Database\Reader;
 use Cake\I18n\FrozenTime;
+use Cake\Cache\Cache;
 
 class ApProfilesController extends AppController {
 
@@ -544,7 +545,7 @@ class ApProfilesController extends AppController {
         $this->viewBuilder()->setOption('serialize', true);
     }
     
-    public function apStaticEntryOverridesView(){
+    public function apStaticEntryOverridesViewZZ(){
     
         $date = [];
     
@@ -622,6 +623,77 @@ class ApProfilesController extends AppController {
         $this->viewBuilder()->setOption('serialize', true);
     
     }
+    
+    public function apStaticEntryOverridesView(){
+
+        $data = [];
+        $entryId = $this->request->getQuery('ap_profile_entry_id');
+        $apId = $this->request->getQuery('ap_id');
+
+        $entry = $this->ApProfileEntries
+            ->find()
+            ->where(['ApProfileEntries.id' => $entryId])
+            ->contain(['ApProfileExitApProfileEntries.ApProfileExits'])
+            ->first();
+
+        if ($entry) {
+            $entryName = $entry->name;
+            $encryption = $entry->encryption;
+            $exit = $entry->ap_profile_exit_ap_profile_entries[0] ?? null;
+            $exitType = $exit->ap_profile_exit->type ?? null;
+
+            // Initialize default values
+            $ssid = '';
+            $key = '';
+            $vlan = 0;
+            $showKey = in_array($encryption, ['wep', 'psk', 'psk2']);
+            $showVlan = in_array($exitType, ['tagged_bridge', 'tagged_bridge_l3']);
+            $check = false;
+
+            // Load overrides in one go
+            $overrides = $this->ApStaticEntryOverrides
+                ->find()
+                ->where([
+                    'ap_profile_entry_id' => $entryId,
+                    'ap_id' => $apId,
+                    'item IN' => ['ssid', 'key', 'vlan']
+                ])
+                ->indexBy('item')
+                ->toArray();
+
+            if (isset($overrides['ssid'])) {
+                $check = true;
+                $ssid = $overrides['ssid']->value;
+            }
+
+            if ($showKey && isset($overrides['key'])) {
+                $key = $overrides['key']->value;
+            }
+
+            if ($showVlan && isset($overrides['vlan'])) {
+                $vlan = $overrides['vlan']->value;
+            }
+
+            $data = [
+                'entry_name' => $entryName,
+                'check' => $check,
+                'ap_proile_entry_id' => $entryId, // Typo remains as-is if used elsewhere
+                'key' => $key,
+                'show_key' => $showKey,
+                'vlan' => $vlan,
+                'show_vlan' => $showVlan,
+                'ssid' => $ssid
+            ];
+        }
+
+        $this->set([
+            'data' => $data,
+            'success' => true
+        ]);
+        $this->viewBuilder()->setOption('serialize', true);
+    }
+
+    
 
     public function apProfileEntryDelete(){
 
@@ -745,6 +817,99 @@ class ApProfilesController extends AppController {
         ]);
         $this->viewBuilder()->setOption('serialize', true);
     }
+    
+    //Function using the Cashe module but it did not make much of a difference ....
+    public function apProfileExitsIndexZZ(){
+     
+        $this->loadModel('ApProfileExits');
+
+        $user = $this->_ap_right_check();
+        if (!$user) {
+            return;
+        }
+
+        $apProfileId = $this->request->getQuery('ap_profile_id');
+        if (!$apProfileId) {
+            $this->set([
+                'items' => [],
+                'success' => true
+            ]);
+            $this->viewBuilder()->setOption('serialize', true);
+            return;
+        }
+                
+        $cacheKey = "ap_profile_exits_index_{$apProfileId}";
+        $cachedData = Cache::read($cacheKey, 'default');
+        if ($cachedData) {
+            $this->set($cachedData);
+            $this->viewBuilder()->setOption('serialize', true);
+            return;
+        }
+        
+        $items = [];
+
+        // Optionally add the 'no_exit' entry
+        if ($this->request->getQuery('add_no_exit') === 'true') {
+            $items[] = [
+                'id' => 0,
+                'ap_profile_id' => $apProfileId,
+                'type' => 'no_bridge',
+                'connects_with' => []
+            ];
+        }
+
+        $exits = $this->ApProfileExits->find()
+            ->contain(['ApProfileExitApProfileEntries.ApProfileEntries', 'FirewallProfiles', 'SqmProfiles'])
+            ->where(['ApProfileExits.ap_profile_id' => $apProfileId])
+            ->all();
+
+        foreach ($exits as $exit) {
+            $exitEntries = [];
+
+            foreach ($exit->ap_profile_exit_ap_profile_entries as $entryLink) {
+                $entryId = $entryLink->ap_profile_entry_id;
+
+                if ($entryId > 0 && isset($entryLink->ap_profile_entry->name)) {
+                    $exitEntries[] = ['name' => $entryLink->ap_profile_entry->name];
+                } elseif ($entryId === 0) {
+                    $exitEntries[] = ['name' => 'LAN (If Hardware Supports It)'];
+                } elseif (preg_match('/^-9/', $entryId)) {
+                    $vlanId = str_replace('-9', '', $entryId);
+                    $exitEntries[] = ['name' => "Dynamic VLAN $vlanId"];
+                }
+            }
+
+            $firewallName = $exit->apply_firewall_profile && $exit->firewall_profile ? 
+                            $exit->firewall_profile->name : 'Unknown Firewall Profile';
+
+            $sqmName = $exit->apply_sqm_profile && $exit->sqm_profile ?
+                       $exit->sqm_profile->name : 'Unknown SQM Profile';
+
+            $items[] = [
+                'id' => $exit->id,
+                'ap_profile_id' => $exit->ap_profile_id,
+                'type' => $exit->type,
+                'vlan' => (int) $exit->vlan,
+                'connects_with' => $exitEntries,
+                'apply_firewall_profile' => $exit->apply_firewall_profile,
+                'firewall_profile_id' => $exit->firewall_profile_id,
+                'firewall_profile_name' => $firewallName,
+                'apply_sqm_profile' => $exit->apply_sqm_profile,
+                'sqm_profile_id' => $exit->sqm_profile_id,
+                'sqm_profile_name' => $sqmName
+            ];
+        }
+        
+        $responseData = [
+            'items' => $items,
+            'success' => true
+        ];
+        
+        Cache::write($cacheKey, $responseData, 'default');
+        $this->set($responseData);
+        $this->viewBuilder()->setOption('serialize', true);
+    }
+  
 
     public function apProfileExitAdd(){
         $this->loadModel('ApProfileExitApProfileEntries');
@@ -2230,7 +2395,22 @@ class ApProfilesController extends AppController {
                         $this->{'ApConnectionSettings'}->save($ent_ws);    
                     }
                 }               
+            }
+            
+            if($this->request->getData('internet_connection') == 'wifi_ent'){
+                foreach(array_keys($cdata) as $key){
+                    if(preg_match('/^wifi_ent_/',$key)){
+                        $d_ws = [];
+                        $d_ws['ap_id']      = $new_id;
+                        $d_ws['grouping']   = 'wifi_ent_setting';
+                        $d_ws['name']       = preg_replace('/^wifi_ent_/', '', $key);
+                        $d_ws['value']      = $cdata["$key"];
+                        $ent_ws = $this->{'ApConnectionSettings'}->newEntity($d_ws);  
+                        $this->{'ApConnectionSettings'}->save($ent_ws);    
+                    }
+                }               
             } 
+             
             
             if($this->request->getData('internet_connection') == 'qmi'){
                 foreach(array_keys($cdata) as $key){
@@ -2658,6 +2838,26 @@ class ApProfilesController extends AppController {
                             }               
                         } 
                         
+                        $this->{'ApConnectionSettings'}->deleteAll([ //
+                            'ApConnectionSettings.ap_id' => $new_id,
+                            'ApConnectionSettings.grouping' => 'wifi_ent_setting'
+                        ]);    
+                        
+                        if($this->request->getData('internet_connection') == 'wifi_ent'){
+                            foreach(array_keys($cdata) as $key){
+                                if(preg_match('/^wifi_ent_/',$key)){
+                                    $d_ws = [];
+                                    $d_ws['ap_id']      = $new_id;
+                                    $d_ws['grouping']   = 'wifi_ent_setting';
+                                    $d_ws['name']       = preg_replace('/^wifi_ent_/', '', $key);
+                                    $d_ws['value']      = $cdata["$key"];
+                                    $ent_ws = $this->{'ApConnectionSettings'}->newEntity($d_ws);  
+                                    $this->{'ApConnectionSettings'}->save($ent_ws);    
+                                }
+                            }               
+                        } 
+                        
+                                              
                         $this->{'ApConnectionSettings'}->deleteAll([ //
                             'ApConnectionSettings.ap_id' => $new_id,
                             'ApConnectionSettings.grouping' => 'qmi_setting'
@@ -3103,6 +3303,12 @@ class ApProfilesController extends AppController {
                 if($ncs->grouping == 'wifi_pppoe_setting'){
                     $data['internet_connection'] = 'wifi_pppoe';
                     $ws_n           = 'wifi_pppoe_'.$ncs->name;
+                    $data[$ws_n]    = $ncs->value;
+                }
+                
+                if($ncs->grouping == 'wifi_ent_setting'){
+                    $data['internet_connection'] = 'wifi_ent';
+                    $ws_n           = 'wifi_ent_'.$ncs->name;
                     $data[$ws_n]    = $ncs->value;
                 }
                 

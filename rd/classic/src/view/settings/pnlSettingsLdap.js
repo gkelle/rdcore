@@ -31,7 +31,8 @@ Ext.define('Rd.view.settings.pnlSettingsLdap', {
     ],
     requires: [
         'Rd.view.settings.vcSettingsLdap',
-        'Rd.view.settings.winSettingsLdapTest'
+        'Rd.view.settings.winSettingsLdapTest',
+        'Rd.view.settings.cntSettingsLdapRba'
     ],
     controller  : 'vcSettingsLdap',
     listeners       : {
@@ -44,6 +45,7 @@ Ext.define('Rd.view.settings.pnlSettingsLdap', {
         var cntLdap  = {
             xtype       : 'container',
             width       : w_prim,
+            itemId      : 'cntLdap',
             layout      : 'anchor',
             defaults    : {
                 anchor  : '100%'
@@ -136,12 +138,93 @@ Ext.define('Rd.view.settings.pnlSettingsLdap', {
                 }  
             ]
         }
+        
+        var cntLdapRba  = {
+            xtype       : 'container',
+            width       : w_prim,
+            itemId      : 'cntLdapRba',
+            layout      : 'anchor',
+            defaults    : {
+                anchor  : '100%'
+            },
+            defaultType : 'textfield',
+            items       : [
+                { 
+                    fieldLabel      : 'Enable', 
+                    name            : 'ldap_rba_enabled', 
+                    itemId          : 'chkLdapRbaEnabled',
+                    labelClsExtra   : 'lblRdReq',
+                    checked         : false, 
+                    xtype           : 'checkbox'
+                },
+                {
+                    xtype       : 'component',
+                    html        : 'Common Settings',
+                    cls         : 'heading',
+                    margin      : '25 0 0 0'
+                },
+                {
+                    xtype       : 'textfield',
+                    fieldLabel  : 'Group Attribute',
+                    name        : 'ldap_rba_group_attribute',
+                    itemId      : 'txtLdapGroupAttribute',
+                    allowBlank  : false,
+                    disabled        : true
+                },
+                {
+                    xtype       : 'cmbClouds',
+                    fieldLabel  : 'Default Cloud',
+                    name        : 'ldap_rba_cloud',
+                    itemId      : 'cmbClouds',
+                    disabled    : true
+                },                                  
+                {
+                    xtype       : 'cmbRealm',
+                    itemId      : 'cmbRealm',
+                    name        : 'ldap_rba_realm',
+                    allOption   : true,
+                    disabled    : true,
+                    fieldLabel  : 'Default Realm',
+                    value       : 0
+                },
+                {
+                    xtype       : 'component',
+                    html        : 'Admin',
+                    cls         : 'heading',
+                    margin      : '25 0 0 0'
+                },
+                {
+                    xtype       : 'cntSettingsLdapRba',
+                    role        : 'admin'               
+                },                
+                {
+                    xtype       : 'component',
+                    html        : 'Operator',
+                    cls         : 'heading',
+                    margin      : '25 0 0 0'
+                },
+                {
+                    xtype       : 'cntSettingsLdapRba',
+                    role        : 'operator'               
+                },             
+                {
+                    xtype       : 'component',
+                    html        : 'View',
+                    cls         : 'heading',
+                    margin      : '25 0 0 0'
+                },
+                {
+                    xtype       : 'cntSettingsLdapRba',
+                    role        : 'view'               
+                }               
+              ]
+        }        
                             
         me.items = [
             {
                 xtype       : 'panel',
-                title       : "LDAP Integration",
-                glyph       : Rd.config.icnData, 
+                title       : "General",
+                glyph       : Rd.config.icnGears, 
                 ui          : 'panel-blue',
                 layout      : {
                   type  : 'vbox',
@@ -150,6 +233,21 @@ Ext.define('Rd.view.settings.pnlSettingsLdap', {
                 },
                 bodyPadding : 10,
                 items       : cntLdap				
+            },
+            {
+                xtype       : 'panel',
+                title       : "LDAP group to RBA mapping",
+                glyph       : Rd.config.icnGroup,
+                itemId      : 'pnlLdapRba',
+                ui          : 'panel-green',
+                disabled    : true,
+                layout      : {
+                  type  : 'vbox',
+                  align : 'start',
+                  pack  : 'start'
+                },
+                bodyPadding : 10,
+                items       : cntLdapRba				
             }
         ];    
         me.callParent(arguments);

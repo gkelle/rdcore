@@ -24,7 +24,7 @@ class NasController extends AppController{
         $this->loadModel('Users');
         $this->loadModel('NaSettings');                 
         $this->loadComponent('Aa');
-        $this->loadComponent('GridButtonsFlat');
+        $this->loadComponent('GridButtonsRba');
         $this->loadComponent('CommonQueryFlat', [ 
             'model'     => 'Nas',
             'sort_by'   => 'Nas.nasname'
@@ -152,6 +152,7 @@ class NasController extends AppController{
 
         //__ Authentication + Authorization __
         $user = $this->_ap_right_check();
+        
         if(!$user){
             return;
         }
@@ -176,6 +177,13 @@ class NasController extends AppController{
         $total  = $query->count();       
         $q_r    = $query->all();
         $items  = [];
+        $update = true;
+        $delete = true;
+        
+        if (isset($user['rba_allowed'])) {
+            $update = in_array('*', $user['rba_allowed']) || in_array('edit', $user['rba_allowed']);
+            $delete = in_array('*', $user['rba_allowed']) || in_array('delete', $user['rba_allowed']);
+        }
 
         foreach($q_r as $i){
                                
@@ -203,35 +211,6 @@ class NasController extends AppController{
 		          	}             	
               	}                     
             }
-/*                     
-			//FIXME Add NaState
-            if(empty($i->na_states)){
-                $status = 'unknown';
-                $status_time = null;
-            }else{
-                if($i['na_states'][0]['state'] == 1){
-                    $status         = 'up';
-                    $status_time    = time()- strtotime($i['na_states'][0]['modified']);
-                }else{
-                    $status         = 'down';
-                    $status_time    = time() -strtotime($i['na_states'][0]['modified']);
-                }
-            }
-            
-			$row['status']	= $status;
-			$row['status']	= $status_time;
-
-            foreach($i->na_states as $t){
-                if(!$this->Aa->test_for_private_parent($t->realm,$user)){
-                    array_push($row['realms'], 
-                    [
-                        'id'                    => $t->realm->id,
-                        'name'                  => $t->realm->name,
-                        'available_to_siblings' => $t->realm->available_to_siblings
-                    ]);
-                }
-            }
-            */
             
             $i->realms = $realms;
             
@@ -240,8 +219,8 @@ class NasController extends AppController{
             	$i->for_system = true;
             } 
             
-            $i->update = true;
-            $i->delete = true;
+            $i->update = $update;
+            $i->delete = $delete;
             array_push($items,$i);      
         }
               
@@ -503,7 +482,10 @@ class NasController extends AppController{
             return;
         }
         
-        $menu = $this->GridButtonsFlat->returnButtons(false,'nas');
+        $role  = $this->Aa->rights_on_cloud();         
+        $menu  = $this->GridButtonsRba->returnButtons($role);
+        
+        //$menu = $this->GridButtonsFlat->returnButtons(false,'nas');
         $this->set(array(
             'items'         => $menu,
             'success'       => true

@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Model\Table;
-
 use Cake\ORM\Table;
+use Cake\Validation\Validator;
 
 class ProfileComponentsTable extends Table{
 
@@ -26,4 +26,20 @@ class ProfileComponentsTable extends Table{
             'dependent'     => true
         ]);
     }
+    
+    
+     public function validationDefault(Validator $validator):Validator{
+        $validator = new Validator();
+        $validator
+            ->notEmpty('name', 'A name is required')
+            ->add('name', [ 
+                'nameUnique' => [
+                    'message' => 'The name you provided is already taken. Please provide another one.',
+                    'rule' => 'validateUnique', 
+                    'provider' => 'table'
+                ]
+            ]);
+        return $validator;
+    }
+    
 }

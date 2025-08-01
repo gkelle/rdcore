@@ -9,8 +9,20 @@ Ext.define('Rd.controller.cDashboard', {
         urlChangePassword   : '/cake4/rd_cake/dashboard/change_password.json',
         urlSettingsSubmit   : '/cake4/rd_cake/dashboard/settings_submit.json',
         urlViewSettings     : '/cake4/rd_cake/dashboard/settings_view.json',
-        defaultScreen       : 'tabMainOverview'      
+        defaultScreen       : 'tabMainOverview',
+        
+        currentScreen       : null,
+        currentHash         : null,
+        subSection          : null,
+        processingRoute     : false    
     },
+    routes: {
+        'cloud/:cloudId/:section' : {
+            action  : 'onCloudSection',
+            before  : 'beforeCloudSection',
+            name    : 'mainRoute'      
+        }
+    },       
     requires: [
  
     ],
@@ -27,6 +39,10 @@ Ext.define('Rd.controller.cDashboard', {
     ],
     init: function() {
         var me  = this;
+        
+        //--Resume the router--
+        Ext.route.Router.resume();
+        
         if (me.inited) {
             return;
         }
@@ -44,7 +60,7 @@ Ext.define('Rd.controller.cDashboard', {
             'pnlDashboard #pnlWest' : {
                 afterrender     : me.pnlWestRendered
             },
-            'pnlDashboard cmbClouds' : {
+            'pnlDashboard #cmbCloud' : {
 		    	select: me.onCloudSelect
 		    },
             'pnlDashboard  #mnuLogout' : {
@@ -73,8 +89,13 @@ Ext.define('Rd.controller.cDashboard', {
         });
       
     },
+    
     actionIndex: function(){
         var me      = this;
+        
+        //--Resume the router--
+        Ext.route.Router.resume();
+        me.setCurrentHash(Ext.History.getToken());     
         var dd      = Ext.getApplication().getDashboardData();
         var user    = dd.user.username;
         var cls     = dd.user.cls;   
@@ -83,12 +104,65 @@ Ext.define('Rd.controller.cDashboard', {
         vp.removeAll(true);
         vp.add([pnlDash]);
     },
+    
     onLogout: function(b){
         var me = this;
+        Ext.route.Router.suspend();
         b.up('panel').close();
         me.getViewP().removeAll(true);
         Ext.getApplication().runAction('cLogin','Exit');
     },
+       
+    beforeCloudSection: function(cloud, section, action) {
+        const me = this;        
+        Ext.log("=== BEFORE Cloud Selection Pappie ==="+cloud+' '+section); 
+        if (this.getProcessingRoute() || section === this.getCurrentScreen() ) {
+            action.stop();
+            return false;
+        }
+        
+        this.setProcessingRoute(true);
+        action.resume();
+    },
+     
+    onCloudSection: function(cloud, section){
+        const me = this;
+        Ext.log("=== Cloud Selection Pappie ==="+cloud+' '+section);
+        this.setCurrentScreen(section);
+        this.urlCloudSelection(cloud,section);
+        this.setProcessingRoute(false);
+    },
+    
+    clickCloudSection: function(cloud, section){
+        const me = this;
+        if(cloud){     
+            console.log("CLICK SELECTION "+cloud+' '+section);
+            this.setCurrentScreen(section);
+            var hash = 'cloud/'+cloud+'/'+section;
+            this.redirectTo({
+            
+                mainRoute       : hash,
+                networkActive   : null,
+                apActive        : null
+                
+            });
+            
+        }     
+    },
+    
+    urlCloudSelection: function(cloud, section){
+        const me = this;
+        console.log("URL SELECTION "+cloud+' '+section);
+        var rootNode = me.getPnlDashboard().down('#tlNav').getStore().getRootNode();
+        rootNode.eachChild(function(n) {
+            if(n.get('text') == section){
+                me.getPnlDashboard().down('#tlNav').setSelection(n);
+                return false; // EXIT the loop
+            }        
+        });    
+    },
+    
+        
     loadSettings: function(win){
         var me      = this; 
         var form    = win.down('form'); 
@@ -180,27 +254,10 @@ Ext.define('Rd.controller.cDashboard', {
             failure: Ext.ux.formFail
         });
     },
-    updateBanner: function(tabpanel) {  
-        var glyph   = tabpanel.getGlyph();
-        var title   = tabpanel.getTitle();
-        var iConfig = tabpanel.getInitialConfig();
-        if(iConfig.tooltip !== undefined){
-            title = iConfig.tooltip;
-        }
-        
-        //Glyph needs to be witout '@FontAwesome';
-		if(glyph!=null){
-  		    glyph       = glyph.replace('@FontAwesome', "");
-		}
-        
-        //Now we can set it in the header...
-        var pnlDashboard = tabpanel.up('pnlDashboard');
-        //We have to first get the current data to prevent other items from vanishing 
-        var new_data = Ext.Object.merge(pnlDashboard.down('#tbtHeader').getData(),{fa_value:'&#'+glyph+';', value :title});
-        pnlDashboard.down('#tbtHeader').update(new_data);
-    },
     onCloudSelect: function(cmb,record){
     	var me = this;
+    	console.log("QQQQQQQQQQ");
+    	
     	Ext.getApplication().setCloudId(cmb.getValue());
         if(record){
     	    Ext.getApplication().setCloudName(record.get('name'));
@@ -239,12 +296,28 @@ Ext.define('Rd.controller.cDashboard', {
                 var result = Ext.decode(resp.responseText);
                 myStore.getRoot().removeAll();
                 myStore.getRoot().appendChild(result.items);
-
+                
+                console.log("^^^^^^^^^^^^^^^^^^^^^^^");
+                console.log(me.getCurrentScreen());
+                              
                 //--Set the detault selected item--
                 var rootNode = me.getPnlDashboard().down('#tlNav').getStore().getRootNode();
                 rootNode.eachChild(function(n) {
-                    if(n.get('id') == me.getDefaultScreen()){
-                        me.getPnlDashboard().down('#tlNav').setSelection(n);
+                                
+                    //If CurrentScreen is set ... override it and unset it
+                    if(me.getCurrentScreen()){
+                        section = me.getCurrentScreen();  
+                        if(n.get('text') == section){
+                            me.getPnlDashboard().down('#tlNav').setSelection(n);
+                            return false; // EXIT the loop
+                        }
+                    }else{
+                
+                        if(n.get('id') == me.getDefaultScreen()){
+                            me.getPnlDashboard().down('#tlNav').setSelection(n);
+                            return false; // EXIT the loop
+                        }
+                        
                     }
                 });
             }
@@ -282,7 +355,7 @@ Ext.define('Rd.controller.cDashboard', {
 				}
 			});
    		}else{
-   			pnlWest.setWidth(180).getEl().slideIn('l');
+   			pnlWest.setWidth(150).getEl().slideIn('l');
    		}   
     },
     treeNodeSelect: function(tree,record,ndx,opts){
@@ -293,12 +366,14 @@ Ext.define('Rd.controller.cDashboard', {
     		var c	 = record.get('controller');
             var pnl  = me.getViewP().down('#pnlCenter');
     		var item = pnl.down('#'+id);
-            glyph    = record.get('glyph');
+            var glyph= record.get('glyph');
 
             var pnlDashboard = me.getViewP().down('pnlDashboard');
-
             var new_data = Ext.Object.merge(pnlDashboard.down('#tbtHeader').getData(),{fa_value:'&#'+glyph+';', value :name});
             pnlDashboard.down('#tbtHeader').update(new_data);
+
+            me.clickCloudSection(Ext.getApplication().getCloudId(),name);
+                       
     		if(!item){
     			var added = Ext.getApplication().runAction(c,'Index',pnl,id);
                 if(!added){
@@ -315,6 +390,9 @@ Ext.define('Rd.controller.cDashboard', {
     },
     pnlWestRendered: function(pnl){
         var me  = this;
+        
+        me.redirectTo(me.getCurrentHash(),{ force: true });
+        
         var dd  = Ext.getApplication().getDashboardData();
         tl      = pnl.down('#tlNav');
         var myStore = tl.getStore();
@@ -322,11 +400,14 @@ Ext.define('Rd.controller.cDashboard', {
         myStore.getRoot().appendChild(dd.tree_nav);
         //--Set the detault selected item--
         var rootNode = pnl.down('#tlNav').getStore().getRootNode();
-        rootNode.eachChild(function(n) {
+        
+        
+       /* rootNode.eachChild(function(n) {
             if(n.get('id') == me.getDefaultScreen()){
                 pnl.down('#tlNav').setSelection(n);
             }
-        });
+        });*/
+        
 
         if(dd.user.cloud_count == 0){
             console.log("No Clouds - Start Up the Wizard");

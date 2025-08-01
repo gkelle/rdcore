@@ -164,19 +164,31 @@ Ext.define('Rd.controller.cProfiles', {
                         url: me.getUrlDelete(),
                         method: 'POST',          
                         jsonData: list,
-                        success: function(batch,options){
-                            Ext.ux.Toaster.msg(
-                                i18n('sItem_deleted'),
-                                i18n('sItem_deleted_fine'),
-                                Ext.ux.Constants.clsInfo,
-                                Ext.ux.Constants.msgInfo
-                            );
+                        success: function(response, opts) {
+                            var jsonData = Ext.decode(response.responseText);
+                            if(jsonData.success){
+                                Ext.ux.Toaster.msg(
+                                            i18n('sItem_deleted'),
+                                            i18n('sItem_delete_fine'),
+                                            Ext.ux.Constants.clsInfo,
+                                            Ext.ux.Constants.msgInfo
+                                );    
+                            }
+                            if(jsonData.success == false){
+                                Ext.ux.Toaster.msg(
+                                    i18n('sProblems_deleting_item'),
+                                    jsonData.message,
+                                    Ext.ux.Constants.clsWarn,
+                                    Ext.ux.Constants.msgWarn
+                                );                           
+                            }
                             me.reload(); //Reload from server
-                        },                                    
-                        failure: function(batch,options){
+                        },
+                        failure: function(response, opts) {
+                            console.log('server-side failure with status code ' + response.status);
                             Ext.ux.Toaster.msg(
                                 i18n('sProblems_deleting_item'),
-                                batch.proxy.getReader().rawData.message.message,
+                                response.status,
                                 Ext.ux.Constants.clsWarn,
                                 Ext.ux.Constants.msgWarn
                             );

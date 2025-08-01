@@ -128,23 +128,26 @@ Ext.define('Rd.view.aps.gridApLists' ,{
                 tdCls       : 'gridTree',
                 width		: 130,
                 renderer    : function(value,metaData, record){
-                	var gateway     = record.get('gateway');
-                	var reboot_flag = record.get('reboot_flag');
-                	var override_flag = record.get('override_flag');
-                	 
+                
+                	const gateway       = record.get('gateway');
+                	const reboot_flag   = record.get('reboot_flag');
+                	const override_flag = record.get('override_flag');             	
+                	const apId          = record.get('id');
+             	 
                 	var rb_string   = '';
                 	if(reboot_flag == 1){
-                	    rb_string = "<i class=\"fa fa-power-off\" style=\"color:orange;\"></i>";
+                	    rb_string = `<i class="fa fa-power-off" style="color:orange;"></i>`;
                 	}
                 	var override_string   = '';
                 	if(override_flag){
-                	    override_string = "<i class=\"fa fa-tag\" style=\"color:#34ebe8;\"></i> ";
+                	    override_string = `<i class="fa fa-tag" style="color:#34ebe8;"></i> `;
                 	}
+                	
                     if(gateway == 'yes'){
-                        return "<div class=\"fieldGreyWhite\" style=\"text-align:left;\">"+override_string+rb_string+"  "+value+"</div>";
+                        return `<div style="text-align:left;">${override_string} ${rb_string}  <a href="javascript:void(0)" class='grid-link'>${value}</a></div>`;
                     }
                     if(gateway == 'no'){
-                        return "<div class=\"fieldGrey\" style=\"text-align:left;\">"+override_string+rb_string+"  "+value+"</div>";
+                        return `<div style="text-align:left;">${override_string} ${rb_string}  <a href="javascript:void(0)" class='grid-link'>${value}</a></div>`;
                     }  	             
                 },
                 stateId     : 'StateGridApLists4',

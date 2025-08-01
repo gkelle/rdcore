@@ -3,6 +3,7 @@ Ext.define('Rd.view.components.frmWifiEntryPoint', {
     alias           : 'widget.frmWifiEntryPoint',
     requires: [
         'Rd.view.components.cmbEncryptionOptions',
+        'Rd.view.components.cmbPasspointProfile',
         'Rd.view.components.vcWifiEntryPoint',
         'Rd.view.components.gridSchedule'
     ],
@@ -293,6 +294,14 @@ Ext.define('Rd.view.components.frmWifiEntryPoint', {
                                 disabled    : true,
                                 boxLabel  	: 'Hotspot 2.0',
                                 boxLabelCls	: 'boxLabelRd'
+                            },
+                            {
+                                xtype       : 'cmbPasspointProfile',
+                                itemId      : 'cmbPasspointProfile',
+                                labelClsExtra: 'lblRd',
+                                disabled    : true,
+                                hidden      : true,
+                                include_all_option : false
                             },
                             {
 						        xtype       : 'checkbox',      

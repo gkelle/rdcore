@@ -10,26 +10,24 @@ class UsageTask extends Shell {
   
      public function initialize():void{
         parent::initialize();
-        $this->loadModel('Radusergroups');
-        $this->loadModel('Radgroupchecks');
-        $this->loadModel('Radaccts'); 
-        $this->loadModel('Radchecks');  
-        $this->loadModel('MacUsages');  
+        $this->loadModel('Radchecks');   
     }
 
     public function time_usage($counter_data,$username,$field){
-        print_r($counter_data);
+        //print_r($counter_data);
         
         $conn = ConnectionManager::get('default');
         
         $query_string = false;
         if($counter_data['reset'] =='never'){
-          	$query_string = "SELECT IFNULL(SUM(AcctSessionTime),0) as used FROM radacct WHERE $field='$username'"; 
+          	$query_string = "SELECT IFNULL(SUM(GREATEST(UNIX_TIMESTAMP(timestamp) - UNIX_TIMESTAMP(created), 0)), 0) AS used FROM user_stats WHERE $field='$username'";
+          	
         }else{
             $start_time = $this->_find_start_time($counter_data);
             if($start_time){
-            	 $query_string = "SELECT IFNULL(SUM(acctsessiontime - GREATEST(($start_time - UNIX_TIMESTAMP(acctstarttime)), 0)),0) as used ".
-                                "FROM radacct WHERE $field='$username' AND UNIX_TIMESTAMP(acctstarttime) + acctsessiontime > '$start_time'";
+            	 $query_string = "SELECT IFNULL(SUM(GREATEST(UNIX_TIMESTAMP(timestamp) - GREATEST(UNIX_TIMESTAMP(created), $start_time), 0)), 0) AS used ".
+                                 "FROM user_stats ".
+                                 "WHERE $field='$username' AND UNIX_TIMESTAMP(timestamp) > '$start_time'";
             }
         }
 
@@ -45,20 +43,20 @@ class UsageTask extends Shell {
     }
 
 	public function time_usage_for_mac($counter_data,$username,$mac){
-        print_r($counter_data);
+        //print_r($counter_data);
         
         $conn = ConnectionManager::get('default');
         
         $query_string = false;
         if($counter_data['reset'] =='never'){
-			 $query_string = "SELECT IFNULL(SUM(AcctSessionTime),0) as used FROM radacct WHERE username='$username' AND callingstationid='$mac'"; 
+			 $query_string = "SELECT IFNULL(SUM(GREATEST(UNIX_TIMESTAMP(timestamp) - UNIX_TIMESTAMP(created), 0)), 0) AS used FROM user_stats WHERE username='$username' AND callingstationid='$mac'"; 
              
         }else{
             $start_time = $this->_find_start_time($counter_data);
             if($start_time){
-				   $query_string = "SELECT IFNULL(SUM(acctsessiontime - GREATEST(($start_time - UNIX_TIMESTAMP(acctstarttime)), 0)),0) as used ".
-                                "FROM radacct WHERE username='$username' AND callingstationid='$mac' ".
-                                                                "AND UNIX_TIMESTAMP(acctstarttime) + acctsessiontime > '$start_time'";
+				   $query_string = "SELECT IFNULL(SUM(GREATEST(UNIX_TIMESTAMP(timestamp) - GREATEST(UNIX_TIMESTAMP(created), $start_time), 0)), 0) AS used ".
+                                "FROM user_stats ".
+                                "WHERE username='$username' AND callingstationid='$mac' AND UNIX_TIMESTAMP(timestamp) > '$start_time'";
 
             }
         }
@@ -75,19 +73,20 @@ class UsageTask extends Shell {
     }
 
     public function data_usage($counter_data,$username,$field){
-        print_r($counter_data);
+        //print_r($counter_data);
         
         $conn = ConnectionManager::get('default');
         
         $query_string = false;
         if($counter_data['reset'] =='never'){
-            $query_string = "SELECT IFNULL(SUM(acctinputoctets)+SUM(acctoutputoctets),0) as used FROM radacct WHERE $field='$username'"; 
+            $query_string = "SELECT IFNULL(SUM(acctinputoctets)+SUM(acctoutputoctets),0) as used FROM user_stats WHERE $field='$username'"; 
         }else{
             $start_time = $this->_find_start_time($counter_data);
             if($start_time){
-                $query_string = "SELECT IFNULL(SUM(acctinputoctets)+ ".
-                                "SUM(acctoutputoctets),0) as used ".
-                                "FROM radacct WHERE $field='$username' AND UNIX_TIMESTAMP(acctstarttime) + acctsessiontime > '$start_time'";
+                $query_string = "SELECT IFNULL(SUM(acctinputoctets) + SUM(acctoutputoctets), 0) AS used ".
+                                "FROM user_stats ".
+                                "WHERE $field = '$username' ".
+                                "AND created > FROM_UNIXTIME($start_time)";
             }
         }
 
@@ -104,20 +103,20 @@ class UsageTask extends Shell {
     }
 
 	public function data_usage_for_mac($counter_data,$username,$mac){
-        print_r($counter_data);
+        //print_r($counter_data);
         
         $conn = ConnectionManager::get('default');
         
         $query_string = false;
         if($counter_data['reset'] =='never'){
-            $query_string = "SELECT IFNULL(SUM(acctinputoctets)+SUM(acctoutputoctets),0) as used FROM radacct WHERE username='$username' AND callingstationid='$mac'"; 
+            $query_string = "SELECT IFNULL(SUM(acctinputoctets)+SUM(acctoutputoctets),0) as used FROM user_stats WHERE username='$username' AND callingstationid='$mac'"; 
         }else{
             $start_time = $this->_find_start_time($counter_data);
             if($start_time){
-                $query_string = "SELECT IFNULL(SUM(acctinputoctets)+ ".
-                                "SUM(acctoutputoctets),0) as used ".
-                                "FROM radacct WHERE username='$username' AND callingstationid='$mac' ".
-								"AND UNIX_TIMESTAMP(acctstarttime) + acctsessiontime > '$start_time'";
+                $query_string = "SELECT IFNULL(SUM(acctinputoctets) + SUM(acctoutputoctets), 0) AS used ".
+                                "FROM user_stats ".
+                                "WHERE username='$username' AND callingstationid='$mac' ".
+								"AND created > FROM_UNIXTIME($start_time)";
             }
         }
 
@@ -167,7 +166,7 @@ class UsageTask extends Shell {
         $usage = false;
         $this->_show_header('no reset time',$username); 
         $conn   = ConnectionManager::get('default');
-        $stmt   = $conn->execute("SELECT IFNULL(SUM(AcctSessionTime),0) as used FROM radacct WHERE username='$username'");
+        $stmt   = $conn->execute("SELECT IFNULL(SUM(GREATEST(UNIX_TIMESTAMP(timestamp) - UNIX_TIMESTAMP(created), 0)), 0) AS used FROM user_stats WHERE username='$username'");
         $row    = $stmt->fetch('assoc');
         $accounting_used = $row['used'];
         return $accounting_used;
@@ -178,7 +177,7 @@ class UsageTask extends Shell {
         $usage = false;
         $this->_show_header('no reset data',$username);
         $conn   = ConnectionManager::get('default');
-        $stmt   = $conn->execute("SELECT IFNULL(SUM(acctinputoctets)+SUM(acctoutputoctets),0) as used FROM radacct WHERE username='$username'");
+        $stmt   = $conn->execute("SELECT IFNULL(SUM(acctinputoctets)+SUM(acctoutputoctets),0) as used FROM user_stats WHERE username='$username'");
         $row    = $stmt->fetch('assoc');
         $accounting_used = $row['used'];
         return $accounting_used;
@@ -193,8 +192,8 @@ class UsageTask extends Shell {
             $expire     = $q_r->value;
             $pieces     = explode("-", $expire);
             $time_avail = ($pieces[0] * 86400)+($pieces[1] * 3600)+($pieces[2] * 60)+($pieces[3]);
-            $conn   = ConnectionManager::get('default');
-            $stmt   = $conn->execute("SELECT (UNIX_TIMESTAMP(now()) - UNIX_TIMESTAMP(acctstarttime)) as time_since_login from radacct where username='$username' order by acctstarttime ASC LIMIT 1");
+            $conn   = ConnectionManager::get('default');           
+            $stmt   = $conn->execute("SELECT (UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(created)) AS time_since_login FROM user_stats WHERE username = '$username' ORDER BY created ASC LIMIT 1");
             $row    = $stmt->fetch('assoc');
      
             if($row){
@@ -221,9 +220,9 @@ class UsageTask extends Shell {
             $pieces     = explode("-", $expire);
             $time_avail = ($pieces[0] * 86400)+($pieces[1] * 3600)+($pieces[2] * 60)+($pieces[3]);
             $conn       = ConnectionManager::get('default');
-            $stmt       = $conn->execute("SELECT (UNIX_TIMESTAMP(now()) - UNIX_TIMESTAMP(acctstarttime)) as time_since_login from radacct where username='$username' order by acctstarttime ASC LIMIT 1");
+            $stmt       = $conn->execute("SELECT (UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(created)) AS time_since_login FROM user_stats WHERE username = '$username' ORDER BY created ASC LIMIT 1");
             $row        = $stmt->fetch('assoc');
-
+            
             $perc_used_from_login  = intval(($row['time_since_login'] / $time_avail)* 100);
 
             if($perc_used_from_login >= 100){

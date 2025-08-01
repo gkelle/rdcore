@@ -49,7 +49,7 @@ Ext.define('Rd.view.dashboard.pnlDashboard', {
         };
 
         var micro = false
-        var west_width = 180;
+        var west_width = 150;
         if(me.dashboard_data.compact){
             micro = true;
             west_width = 55;
@@ -127,6 +127,7 @@ Ext.define('Rd.view.dashboard.pnlDashboard', {
       	
       	var cmbCloud = {
         	xtype	    : 'cmbClouds',
+        	itemId      : 'cmbCloud',
         	width       : 380,
             labelWidth  : 30,
             userCls     : 'rdCombo',

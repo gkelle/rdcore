@@ -33,6 +33,8 @@ use Authentication\Authenticator\Result;
 
 use Authentication\Identifier\LdapIdentifier as BaseLdapIdentifier;
 
+use Cake\Log\Log;
+
 class CustomLdapIdentifier extends BaseLdapIdentifier
 {
 
@@ -79,17 +81,56 @@ class CustomLdapIdentifier extends BaseLdapIdentifier
             ->combine('name', 'value') // Convert to key-value array
             ->toArray();
             
+  //      print_r($ldapSettings);
+            
          /*  $ldapSettings = [
-            'ldap_enabled'      => 0,
-            'ldap_host'         => '127.0.0.1' 
-            'ldap_bind_dn'      => 'cn=admin,dc=example,dc=com',
-            'ldap_bind_password' => 'testing123',
-            'ldap_base_dn'      => 'dc=example,dc=com',
-            'ldap_port'         => 389,
-            'ldap_use_ldaps'    => 0,           
-            'ldap_filter'       => (&(objectClass=posixAccount)(uid=%s))      
-        ]; 	*/	
-
+            'ldap_enabled'          => 1,
+            'ldap_host'             => '127.0.0.1' 
+            'ldap_bind_dn'          => 'cn=admin,dc=example,dc=com',
+            'ldap_bind_password'    => 'testing123',
+            'ldap_base_dn'          => 'dc=example,dc=com',
+            'ldap_port'             => 389,
+            'ldap_use_ldaps'        => 0,           
+            'ldap_filter'           => (&(objectClass=posixAccount)(uid=%s))  or (uid=%s),
+            
+            'ldap_rba_enabled'          => 1,
+            'ldap_rba_group_attribute'  => memberof,
+            'ldap_rba_cloud'            => 54,
+            'ldap_rba_admin_enabled'    => 1,
+            'ldap_rba_operator_enabled' => 0,
+            'ldap_rba_view_enabled'     => 0,
+            'ldap_rba_admin_group'      => cn=developers,ou=Groups,dc=localdomain,dc=com,
+            'ldap_rba_admin_cmp_permanent_users'    => 1,
+            'ldap_rba_admin_cmp_dynamic_clients'    => 1,
+            'ldap_rba_admin_cmp_nas'                => 1,
+            'ldap_rba_admin_cmp_profiles'           => 1,
+            'ldap_rba_admin_cmp_realms'             => 1,
+            'ldap_rba_admin_cmp_other'              => 1,
+            'ldap_rba_admin_cmp_meshes'             => 1,
+            'ldap_rba_admin_cmp_ap_profiles'        => 1,
+            'ldap_rba_admin_cmp_vouchers'           => 1,
+            'ldap_rba_operator_cmp_permanent_users' => 0,
+            'ldap_rba_operator_cmp_vouchers'        => 0,
+            'ldap_rba_operator_cmp_dynamic_clients' => 0,
+            'ldap_rba_operator_cmp_nas'             => 0,
+            'ldap_rba_operator_cmp_profiles'        => 0,
+            'ldap_rba_operator_cmp_realms'          => 0,
+            'ldap_rba_operator_cmp_meshes'          => 0,
+            'ldap_rba_operator_cmp_ap_profiles'     => 0,
+            'ldap_rba_operator_cmp_other'           => 0,
+            'ldap_rba_view_cmp_permanent_users'     => 0,
+            'ldap_rba_view_cmp_vouchers'            => 0,
+            'ldap_rba_view_cmp_dynamic_clients'     => 0,
+            'ldap_rba_view_cmp_nas'                 => 0,
+            'ldap_rba_view_cmp_profiles'            => 0,
+            'ldap_rba_view_cmp_realms'              => 0,
+            'ldap_rba_view_cmp_meshes'              => 0,
+            'ldap_rba_view_cmp_ap_profiles'         => 0,
+            'ldap_rba_view_cmp_other'               => 0,
+            'ldap_rba_realm'                        => 0
+            
+        ]; 	*/
+        
         if (!empty($ldapSettings)) {
             // Convert ldap_enabled to a boolean
             $this->ldapEnabled = isset($ldapSettings['ldap_enabled']) && (bool)$ldapSettings['ldap_enabled'];
@@ -106,6 +147,55 @@ class CustomLdapIdentifier extends BaseLdapIdentifier
                 'base_dn'   => $ldapSettings['ldap_base_dn'] ?? null,
                 'filter'    => $ldapSettings['ldap_filter'] ?? null,
                 'enabled'   => $this->ldapEnabled,
+                
+                //Role Based Access
+                'rba_enabled'           => $ldapSettings['ldap_rba_enabled'] ?? null,
+                'rba_group_attribute'   => $ldapSettings['ldap_rba_group_attribute'] ?? null,
+                'rba_cloud'             => $ldapSettings['ldap_rba_cloud'] ?? null,
+                'rba_realm'             => $ldapSettings['ldap_rba_realm'] ?? null,
+                
+                //Admin
+                'rba_admin_enabled'     => $ldapSettings['ldap_rba_admin_enabled'] ?? null,
+                'rba_admin_group'       => $ldapSettings['ldap_rba_admin_group'] ?? null,
+                
+                'rba_admin_cmp_permanent_users' => $ldapSettings['ldap_rba_admin_cmp_permanent_users'] ?? null,
+                'rba_admin_cmp_vouchers'        => $ldapSettings['ldap_rba_admin_cmp_vouchers'] ?? null,
+                'rba_admin_cmp_dynamic_clients' => $ldapSettings['ldap_rba_admin_cmp_dynamic_clients'] ?? null,
+                'rba_admin_cmp_nas'             => $ldapSettings['ldap_rba_admin_cmp_nas'] ?? null,
+                'rba_admin_cmp_profiles'        => $ldapSettings['ldap_rba_admin_cmp_profiles'] ?? null,
+                'rba_admin_cmp_realms'          => $ldapSettings['ldap_rba_admin_cmp_realms'] ?? null,
+                'rba_admin_cmp_meshes'          => $ldapSettings['ldap_rba_admin_cmp_meshes'] ?? null,
+                'rba_admin_cmp_ap_profiles'     => $ldapSettings['ldap_rba_admin_cmp_ap_profiles'] ?? null,
+                'rba_admin_cmp_other'           => $ldapSettings['ldap_rba_admin_cmp_other'] ?? null,
+                
+                //Operator
+                'rba_operator_enabled'     => $ldapSettings['ldap_rba_operator_enabled'] ?? null,
+                'rba_operator_group'       => $ldapSettings['ldap_rba_operator_group'] ?? null,
+                
+                'rba_operator_cmp_permanent_users' => $ldapSettings['ldap_rba_operator_cmp_permanent_users'] ?? null,
+                'rba_operator_cmp_vouchers'        => $ldapSettings['ldap_rba_operator_cmp_vouchers'] ?? null,
+                'rba_operator_cmp_dynamic_clients' => $ldapSettings['ldap_rba_operator_cmp_dynamic_clients'] ?? null,
+                'rba_operator_cmp_nas'             => $ldapSettings['ldap_rba_operator_cmp_nas'] ?? null,
+                'rba_operator_cmp_profiles'        => $ldapSettings['ldap_rba_operator_cmp_profiles'] ?? null,
+                'rba_operator_cmp_realms'          => $ldapSettings['ldap_rba_operator_cmp_realms'] ?? null,
+                'rba_operator_cmp_meshes'          => $ldapSettings['ldap_rba_operator_cmp_meshes'] ?? null,
+                'rba_operator_cmp_ap_profiles'     => $ldapSettings['ldap_rba_operator_cmp_ap_profiles'] ?? null,
+                'rba_operator_cmp_other'           => $ldapSettings['ldap_rba_operator_cmp_other'] ?? null,
+                
+                //View
+                'rba_view_enabled'     => $ldapSettings['ldap_rba_view_enabled'] ?? null,
+                'rba_view_group'       => $ldapSettings['ldap_rba_view_group'] ?? null,
+                
+                'rba_view_cmp_permanent_users' => $ldapSettings['ldap_rba_view_cmp_permanent_users'] ?? null,
+                'rba_view_cmp_vouchers'        => $ldapSettings['ldap_rba_view_cmp_vouchers'] ?? null,
+                'rba_view_cmp_dynamic_clients' => $ldapSettings['ldap_rba_view_cmp_dynamic_clients'] ?? null,
+                'rba_view_cmp_nas'             => $ldapSettings['ldap_rba_view_cmp_nas'] ?? null,
+                'rba_view_cmp_profiles'        => $ldapSettings['ldap_rba_view_cmp_profiles'] ?? null,
+                'rba_view_cmp_realms'          => $ldapSettings['ldap_rba_view_cmp_realms'] ?? null,
+                'rba_view_cmp_meshes'          => $ldapSettings['ldap_rba_view_cmp_meshes'] ?? null,
+                'rba_view_cmp_ap_profiles'     => $ldapSettings['ldap_rba_view_cmp_ap_profiles'] ?? null,
+                'rba_view_cmp_other'           => $ldapSettings['ldap_rba_view_cmp_other'] ?? null,           
+
             ];
 
             // Merge DB config with provided config
@@ -192,6 +282,9 @@ class CustomLdapIdentifier extends BaseLdapIdentifier
         if (!$this->ldapEnabled) {
             return null;
         }
+        
+       // Log::error("Short Circuit - Goodbye!!");
+       // return null;
     
         $this->_connectLdap();
         $fields         = $this->getConfig('fields');

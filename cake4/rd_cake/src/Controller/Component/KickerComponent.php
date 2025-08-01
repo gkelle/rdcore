@@ -44,12 +44,10 @@ class KickerComponent extends Component {
         $this->MeshExitCaptivePortals   = TableRegistry::get('MeshExitCaptivePortals'); 
         $this->MeshExits                = TableRegistry::get('MeshExits'); 
         $this->Nodes                    = TableRegistry::get('Nodes');
-        $this->NodeActions              = TableRegistry::get('NodeActions');
-        
+        $this->NodeActions              = TableRegistry::get('NodeActions');     
         //Accel
         $this->AccelServers             = TableRegistry::get('AccelServers');
-        $this->AccelSessions            = TableRegistry::get('AccelSessions');
-         
+        $this->AccelSessions            = TableRegistry::get('AccelSessions');         
     }
 
     public function kick($ent,$token){
@@ -187,19 +185,15 @@ class KickerComponent extends Component {
         }    
     }
     
-    private function kickJuniperSession($ent){
-    
+    private function kickJuniperSession($ent){  
         //-- Sample Disconnect ---
         //echo "Acct-​Session-​ID='2040',User-Name='zaguy@zarealm.co.za'" |radclient -c '1' -n '3' -r '3' -t '3' -x '127.0.0.1:3799' 'disconnect' 'testing123'       
         $sessionid = $ent->acctsessionid;
         $username  = $ent->username;
-        $ip        = $ent->nasipaddress;
-        
-        $fwd_ip    = $ip; // You can replcat this with a central IP to forward it to
-        
-        $secret    = 'testing123';
-        
-        shell_exec("echo \"Acct-Session-ID='$sessionid',User-Name='$username',NAS-IP-Address='$ip'\" |radclient -c '1' -n '3' -r '3' -t '3' -x '$ip:3799' 'disconnect' '$secret'");
+        $ip        = $ent->nasipaddress;       
+        $fwd_ip    = $ip; // You can replace this with a central IP to forward it to       
+        $secret    = 'testing123';      
+        shell_exec("echo \"Acct-Session-ID='$sessionid',User-Name='$username',NAS-IP-Address='$ip'\" |radclient -c '1' -n '3' -r '3' -t '3' -x '$fwd_ip:3799' 'disconnect' '$secret'");
     } 
          
     private function kickMeshNodeUser($ent,$cloud_id,$token){      

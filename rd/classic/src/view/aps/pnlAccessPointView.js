@@ -8,7 +8,6 @@ Ext.define('Rd.view.aps.pnlAccessPointView', {
     ap_id       : undefined,
     apName      : undefined,
     requires    : [
-        'Rd.view.aps.pnlApViewEntries',
         'Rd.view.aps.pnlApViewSqm',
         'Rd.view.aps.pnlApViewWan',
         'Rd.view.aps.pnlApViewHardware',
@@ -18,12 +17,6 @@ Ext.define('Rd.view.aps.pnlAccessPointView', {
     initComponent: function() {
         var me      = this;
         me.items    = [
-            {
-                title   : 'SSID &#8660; DEVICE',
-                itemId  : 'tabApViewEntries',
-                xtype   : 'pnlApViewEntries',
-                apId    : me.ap_id
-            },
             {
                 title   : 'SQM STATS',
                 itemId  : 'tabApViewSqm',
@@ -36,12 +29,12 @@ Ext.define('Rd.view.aps.pnlAccessPointView', {
                 xtype   : 'pnlApViewWan',
                 apId    : me.ap_id
             },
-		    {
+		/*    {
                 title   : 'HARDWARE',
                 itemId  : 'tabApViewHardware',
                 xtype   : 'pnlApViewHardware',
                 apId    : me.ap_id
-            },
+            },*/
             {
                 title   : "COMMAND EXECUTION",
                 itemId  : 'tabApViewActions',

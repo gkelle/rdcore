@@ -17,8 +17,8 @@ Ext.define('Rd.view.profileComponents.gridProfileComponent' ,{
             {   xtype: 'button',  glyph: Rd.config.icnDelete,  scale: 'large', itemId: 'delete',    tooltip:    i18n('sDelete'),ui:'button-red'}
         ]}, 
         { xtype: 'buttongroup', title: null,items : [
-            {   xtype: 'cmbVendor'     , itemId:'cmbVendor',    emptyText: i18n('sSelect_a_vendor'), padding: '5 0 0 0' },{ xtype: 'tbseparator'},
-            {   xtype: 'cmbAttribute'  , itemId:'cmbAttribute', emptyText: i18n('sSelect_an_attribute'), padding: '5 0 0 0'},
+            {   xtype: 'cmbVendor' ,  fieldLabel : '', width: 250,  itemId:'cmbVendor',    emptyText: i18n('sSelect_a_vendor'), padding: '5 0 0 0' },{ xtype: 'tbseparator'},
+            {   xtype: 'cmbAttribute',fieldLabel : '', width: 250,  itemId:'cmbAttribute', emptyText: i18n('sSelect_an_attribute'), padding: '5 0 0 0'},
             {   xtype: 'button',  glyph: Rd.config.icnAdd,  scale: 'large', itemId: 'add',       tooltip:    i18n('sAdd'),ui:'button-green'}
         ]}        
     ],

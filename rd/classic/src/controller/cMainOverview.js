@@ -42,6 +42,10 @@ Ext.define('Rd.controller.cMainOverview', {
                     if (jsonData.success) {
                         var items = jsonData.items;
                         tp.add(items);
+                        // Set the first tab active, if there are any tabs
+                        if (tp.items.getCount() > 0) {
+                            tp.setActiveTab(0);
+                        }
                     }
                 },
                 scope: me

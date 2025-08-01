@@ -192,7 +192,6 @@ class AccountingShell extends Shell {
             }
         }
 
-
         //____ Permanent users _____
         if($type == 'user'){
             $this->out("<info>$username is a Permanent User</info>");
@@ -219,6 +218,7 @@ class AccountingShell extends Shell {
                             $this->{'PermanentUsers'}->save($q_r);
 		                }
 					}else{
+					
 						//This counter is on the MAC so well add it to the mac_usages table
 						$used       	= $this->Usage->time_usage_for_mac($counters['time'],$username,$mac);
 						$d['username']	= $username;
@@ -254,6 +254,7 @@ class AccountingShell extends Shell {
                             $this->{'PermanentUsers'}->save($q_r);
 		                }
 					}else{
+					
 						//This counter is on the MAC so well add it to the mac_usages table
 						$used       	= $this->Usage->data_usage_for_mac($counters['data'],$username,$mac);
 						$d['username']	= $username;

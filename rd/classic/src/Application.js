@@ -21,10 +21,10 @@ Ext.define('Rd.Application', {
     controllers: [
         'cStartup',
         'cLogin',
-		'cDashboard'
+		'cDashboard'		
     ],
 	// Default Route
-    defaultToken: 'dashboard',
+    //defaultToken: 'dashboard',
 
     dashboardData : null,  //Data on how the dashboard will look like which will be returned after login
     languages   : null,

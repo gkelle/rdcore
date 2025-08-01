@@ -2,7 +2,8 @@ Ext.define('Rd.controller.cUnknownNodes', {
     extend: 'Ext.app.Controller',
     actionIndex: function(pnl,itemId){
         pnl.add({ 
-            title   : 'New Arrivals - Hardware', 
+            title   : 'New Arrivals - Hardware',
+            itemId  : 'arrivals',
             xtype   : 'gridUnknownNodes',
             border  : false,
             plain   : true,

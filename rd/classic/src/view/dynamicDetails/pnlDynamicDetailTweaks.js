@@ -45,7 +45,7 @@ Ext.define('Rd.view.dynamicDetails.pnlDynamicDetailTweaks', {
             ui      : 'button-teal'
         }
     ],
-    OldInitComponent: function(){
+/*    OldInitComponent: function(){
 
         var me      = this;
         var w_prim  = 550;
@@ -347,7 +347,7 @@ Ext.define('Rd.view.dynamicDetails.pnlDynamicDetailTweaks', {
         ];
                     
         me.callParent(arguments);
-    },
+    },*/
     initComponent: function(){
         var me = this;
         Ext.Ajax.request({

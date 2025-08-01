@@ -86,8 +86,7 @@ class CloudsController extends AppController {
         $this->loadComponent('Aa');       
         $this->loadComponent('JsonErrors'); 
         $this->loadComponent('TimeCalculations');
-        $this->loadComponent('Formatter');
-        
+        $this->loadComponent('Formatter');     
     }
     
     public function indexCmb(){

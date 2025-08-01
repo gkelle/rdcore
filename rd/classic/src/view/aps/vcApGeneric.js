@@ -4,7 +4,9 @@ Ext.define('Rd.view.aps.vcApGeneric', {
     config : {
         urlAdvancedSettingsForModel : '/cake4/rd_cake/ap-profiles/advanced-settings-for-model.json',
         urlViewAp                   : '/cake4/rd_cake/ap-profiles/ap-profile-ap-view.json',
-        UrlApStaticOverrides        : '/cake4/rd_cake/ap-profiles/ap-static-entry-overrides-view.json'
+        urlApStaticOverrides        : '/cake4/rd_cake/ap-profiles/ap-static-entry-overrides-view.json',
+        changedLoad                 : false,  
+        
     },
     init: function() {
         var me = this;
@@ -63,6 +65,7 @@ Ext.define('Rd.view.aps.vcApGeneric', {
         var pnlWanPppoe     = form.down('#pnlWanPppoe');
         var pnlWifiStatic   = form.down('#pnlWifiStatic');
         var pnlWifiPppoe    = form.down('#pnlWifiPppoe');
+        var pnlWifiEnt      = form.down('#pnlWifiEnt');
         var pnlQmi          = form.down('#pnlQmi');
         var pnlMwan         = form.down('#pnlMwan');
               
@@ -104,6 +107,14 @@ Ext.define('Rd.view.aps.vcApGeneric', {
         }else{
             pnlWifiPppoe.setHidden(true);
             pnlWifiPppoe.setDisabled(true);
+        }
+        
+        if(cmb.getValue() == 'wifi_ent'){
+            pnlWifiEnt.setHidden(false);
+            pnlWifiEnt.setDisabled(false);   
+        }else{
+            pnlWifiEnt.setHidden(true);
+            pnlWifiEnt.setDisabled(true);
         }
         
         if(cmb.getValue() == 'qmi'){
@@ -195,7 +206,7 @@ Ext.define('Rd.view.aps.vcApGeneric', {
         });
 	}, 
 	loadBasicSettings: function(form){
-        var me      = this;     
+        var me      = this;            
         if(form.apId == 0){
             var hw      = form.down('cmbApHardwareModels');
         }else{
@@ -203,7 +214,7 @@ Ext.define('Rd.view.aps.vcApGeneric', {
                 url     : me.getUrlViewAp(), 
                 method  : 'GET',
                 params  : {'ap_id': form.apId},
-                success : function(a,b,c){
+                success : function(a,b,c){                   
                     var schedule    = form.down("cmbSchedule");
                     var sch_val     = schedule.getValue();
                     if(sch_val != null){
@@ -212,12 +223,15 @@ Ext.define('Rd.view.aps.vcApGeneric', {
                         cmb.getStore().loadData([rec],false);
                         cmb.setValue(b.result.data.schedule_id);
                     }
+                    if(me.getChangedLoad()){
+                        form.setLoading(false);
+                    }
                 }
             });    
         }         
     },
-     radioCountChange: function(count){
-      
+    radioCountChange: function(count){
+          
         var me 		= this;
         var form    = me.getView();
         if(count == undefined){ //If not specified or empty
@@ -260,12 +274,19 @@ Ext.define('Rd.view.aps.vcApGeneric', {
             form.down('#wifi_pppoe_radio_1').setDisabled(true);
             form.down('#wifi_pppoe_radio_1').hide(); 
             form.down('#wifi_pppoe_radio_2').setDisabled(true);
-            form.down('#wifi_pppoe_radio_2').hide(); 
+            form.down('#wifi_pppoe_radio_2').hide();
+            
+            form.down('#wifi_ent_radio_1').setDisabled(true);
+            form.down('#wifi_ent_radio_1').hide(); 
+            form.down('#wifi_ent_radio_2').setDisabled(true);
+            form.down('#wifi_ent_radio_2').hide();  
              
             form.down('#wifi_static_radio_0').setValue(true);  
-            form.down('#wifi_pppoe_radio_0').setValue(true);     
+            form.down('#wifi_pppoe_radio_0').setValue(true);
+            form.down('#wifi_ent_radio_0').setValue(true);    
             form.down('#rgrpWifiPppoeRadio').hide();
             form.down('#rgrpWifiStaticRadio').hide(); 
+            form.down('#rgrpWifiEntRadio').hide(); 
             
             form.down('#wbw_radio_0').setValue(true);       
             form.down('#rgrpWbWradio').hide();    
@@ -295,9 +316,15 @@ Ext.define('Rd.view.aps.vcApGeneric', {
             form.down('#wifi_pppoe_radio_2').setDisabled(true);
             form.down('#wifi_pppoe_radio_2').hide();
             
+            form.down('#wifi_ent_radio_1').setDisabled(false);
+            form.down('#wifi_ent_radio_1').show(); 
+            form.down('#wifi_ent_radio_2').setDisabled(true);
+            form.down('#wifi_ent_radio_2').hide();
+            
             form.down('#rgrpWbWradio').show();
             form.down('#rgrpWifiPppoeRadio').show();
-            form.down('#rgrpWifiStaticRadio').show();      
+            form.down('#rgrpWifiStaticRadio').show();
+            form.down('#rgrpWifiEntRadio').show();      
             
         }
         
@@ -324,9 +351,15 @@ Ext.define('Rd.view.aps.vcApGeneric', {
             form.down('#wifi_pppoe_radio_2').setDisabled(false);
             form.down('#wifi_pppoe_radio_2').show();
             
+            form.down('#wifi_ent_radio_1').setDisabled(false);
+            form.down('#wifi_ent_radio_1').show(); 
+            form.down('#wifi_ent_radio_2').setDisabled(false);
+            form.down('#wifi_ent_radio_2').show();
+            
             form.down('#rgrpWbWradio').show();
             form.down('#rgrpWifiPppoeRadio').show();
-            form.down('#rgrpWifiStaticRadio').show();              
+            form.down('#rgrpWifiStaticRadio').show();  
+            form.down('#rgrpWifiEntRadio').show();             
         }      
     },
     onCmbQmiOptionsChange: function(cmb){
@@ -344,10 +377,10 @@ Ext.define('Rd.view.aps.vcApGeneric', {
             form.down('#qmi_password').setDisabled(false);
         }
     },
-    onCmbApProfileChange: function(cmb){
+    onCmbApProfileChangeZZ: function(cmb){
         var me      = this;
         var form    = cmb.up('form');
-        form.down('#wbw_wan_bridge').getStore().getProxy().setExtraParams({ap_profile_id: cmb.getValue(),add_no_exit : true});
+        form.down('#wbw_wan_bridge').getStore().getProxy().setExtraParams({ap_profile_id: cmb.getValue(),add_no_exit : true});       
         form.down('#wbw_wan_bridge').getStore().reload();
         
         form.down('#wifi_static_wan_bridge').getStore().getProxy().setExtraParams({ap_profile_id: cmb.getValue(),add_no_exit : true});
@@ -365,6 +398,60 @@ Ext.define('Rd.view.aps.vcApGeneric', {
         cmbSe.getStore().load();
                
     },
+    onCmbApProfileChange: function(cmb){
+        var me          = this;        
+        var apProfileId = cmb.getValue()
+        
+        var form    = cmb.up('form');
+        me.setChangedLoad(true);
+        form.setLoading();
+        var s       = Ext.create('Ext.data.Store', {
+            fields: ['id', 'type'],
+            proxy: {
+                    type    : 'ajax',
+                    format  : 'json',
+                    batchActions: true,
+                    url     : '/cake4/rd_cake/ap-profiles/ap_profile_exits_index.json',
+                    reader: {
+                        type            : 'json',
+                        rootProperty    : 'items',
+                        messageProperty : 'message'
+                    }
+            },
+            autoLoad: false
+        });
+        s.getProxy().setExtraParams({ap_profile_id: cmb.getValue(),add_no_exit : true});
+        s.reload({
+            callback: function(records, op, success) {
+                me.guiPrepTwo(form,s,apProfileId);
+            }
+        }); 
+               
+    },
+    
+    guiPrepTwo  : function(form,s,apProfileId){
+        var me = this;
+        form.down('#wbw_wan_bridge').setStore(s);      
+        form.down('#wifi_static_wan_bridge').setStore(s);        
+        form.down('#wifi_pppoe_wan_bridge').setStore(s); 
+        form.down('#wifi_ent_wan_bridge').setStore(s);        
+        form.down('#qmi_wan_bridge').setStore(s);
+
+        
+        var cmbSe   = form.down('tagApProfileStaticEntries');
+        cmbSe.setValue(''); // Clear the values if there were perhaps some selected
+        cmbSe.getStore().getProxy().setExtraParam('ap_profile_id',apProfileId);
+        cmbSe.getStore().load({
+            callback: function(records, op, success) {             
+                if(form.apId > 0){
+                    me.loadBasicSettings(form); //Now that everything is loaded for the specific profile we can reload the screen's data                 
+                }else{
+                    form.setLoading(false);
+                }
+            }
+        });    
+    },
+       
     chkEnableSchedulesChange : function(chk){
 		var me 		= this;
 		var form	= chk.up('form');

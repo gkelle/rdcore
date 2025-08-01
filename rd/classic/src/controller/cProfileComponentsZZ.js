@@ -1,4 +1,4 @@
-Ext.define('Rd.controller.cProfileComponentsOrig', {
+Ext.define('Rd.controller.cProfileComponentsZZ', {
     extend: 'Ext.app.Controller',
     actionIndex: function(tp){
         var me      = this;  

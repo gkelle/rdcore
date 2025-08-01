@@ -34,6 +34,7 @@ Ext.define('Rd.view.aps.pnlAccessPointAddEditAp', {
         'Rd.view.components.winSelectCloud',
         'Rd.view.components.pnlClouds',
         'Rd.view.components.cmbQmiAuth',
+        'Rd.view.components.cmbPasspointUplink',
         'Rd.view.aps.cmbApExits',
         'Rd.view.aps.cntApEntryOverride'
     ],
@@ -90,7 +91,7 @@ Ext.define('Rd.view.aps.pnlAccessPointAddEditAp', {
             itemId  : 'pnlWanStatic',
             hidden  : true,
             disabled: true,
-            bodyStyle   : 'background: #e0ebeb',
+            bodyStyle: 'background: linear-gradient(90deg, #e3ffe7 0%, #d9e7ff 100%); border-radius: 10px;',
             items   : [
                 {
                     xtype       : 'textfield',
@@ -150,7 +151,7 @@ Ext.define('Rd.view.aps.pnlAccessPointAddEditAp', {
             itemId  : 'pnlWanPppoe',
             hidden  : true,
             disabled: true,
-            bodyStyle   : 'background: #e0ebeb',
+            bodyStyle   : 'background: linear-gradient(90deg, #fceff9 0%, #e9e9ff 100%); border-radius: 10px;',
             items   : [
                 {
                     xtype       : 'textfield',
@@ -213,7 +214,7 @@ Ext.define('Rd.view.aps.pnlAccessPointAddEditAp', {
             itemId  : 'cntWbW',
             hidden  : true,
             disabled: true,
-            bodyStyle   : 'background: #e0ebeb',
+            bodyStyle   : 'background: linear-gradient(90deg, #e0fff9 0%, #cfeeff 100%); border-radius: 10px;',
             items   : [
                 {
                     fieldLabel  : 'SSID',
@@ -292,7 +293,7 @@ Ext.define('Rd.view.aps.pnlAccessPointAddEditAp', {
             itemId  : 'pnlWifiStatic',
             hidden  : true,
             disabled: true,
-            bodyStyle   : 'background: #e0ebeb',
+            bodyStyle   : 'background: linear-gradient(90deg, #e0fff9 0%, #cfeeff 100%); border-radius: 10px;',
             items   : [
                 {
                     fieldLabel  : 'SSID',
@@ -421,7 +422,8 @@ Ext.define('Rd.view.aps.pnlAccessPointAddEditAp', {
             itemId  : 'pnlWifiPppoe',
             hidden  : true,
             disabled: true,
-            bodyStyle   : 'background: #e0ebeb',
+
+            bodyStyle   : 'background: linear-gradient(90deg, #ffffff 0%, #e0f0ff 100%); border-radius: 10px;',
             items   : [
                 {
                     fieldLabel  : 'SSID',
@@ -548,12 +550,66 @@ Ext.define('Rd.view.aps.pnlAccessPointAddEditAp', {
             ]
         };
         
+        
+        var pnlWifiEnt = {
+            xtype   : 'panel',
+            itemId  : 'pnlWifiEnt',
+            hidden  : true,
+            disabled: true,
+            bodyStyle   : 'background: linear-gradient(90deg, #dfffe0 0%, #e0f4ff 100%); border-radius: 10px;',
+            items   : [
+                {
+                    xtype               : 'cmbPasspointUplink',
+                    include_all_option  : false,
+                    width               : w_prim
+                },              
+                {
+                    xtype       : 'radiogroup',
+                    fieldLabel  : 'Radio',
+                    itemId      : 'rgrpWifiEntRadio',
+                    columns     : 3,
+                    vertical    : false,
+                    items       : [                        
+                        {
+                            boxLabel  : 'Radio0',
+                            name      : 'wifi_ent_device',
+                            inputValue: 'radio0',
+                            itemId    : 'wifi_ent_radio_0',
+                            margin    : '0 15 0 0',
+                            checked   : true
+                        }, 
+                        {
+                            boxLabel  : 'Radio1',
+                            name      : 'wifi_ent_device',
+                            inputValue: 'radio1',
+                            itemId    : 'wifi_ent_radio_1',
+                            margin    : '0 0 0 15'
+                        },
+                        { 
+                            boxLabel  : 'Radio2',
+                            name      : 'wifi_ent_device',
+                            inputValue: 'radio2',
+                            itemId    : 'wifi_ent_radio_2',
+                            margin    : '0 0 0 15'
+                        }    
+                    ]
+                },
+                {
+                    xtype       : 'cmbApExits',
+                    fieldLabel  : 'Bridge WAN Port',
+                    name        : 'wifi_ent_wan_bridge',
+                    itemId      : 'wifi_ent_wan_bridge',
+                    width       : w_prim
+                }
+            ]
+        };
+        
         var pnlQmi = {
             xtype   : 'panel',
             itemId  : 'pnlQmi',
             hidden  : true,
             disabled: true,
-            bodyStyle   : 'background: #e0ebeb',
+            bodyStyle   : 'background: linear-gradient(90deg, #fff8e7 0%, #f9f5ec 100%); border-radius: 10px;',
             items   : [               
                 { 
                     xtype       : 'cmbQmiAuth',
@@ -617,7 +673,7 @@ Ext.define('Rd.view.aps.pnlAccessPointAddEditAp', {
             itemId  : 'pnlMwan',
             hidden  : true,
             disabled: true,
-            bodyStyle   : 'background: #e0ebeb',
+            bodyStyle   : 'background: linear-gradient(90deg, #eef4ff 0%, #d7e0ff 100%); border-radius: 10px;',
             items   : [                  
                 {
                     xtype               : 'cmbMultiWanProfile',
@@ -775,6 +831,7 @@ Ext.define('Rd.view.aps.pnlAccessPointAddEditAp', {
 	            cntWbW,
 	            pnlWifiStatic,
 	            pnlWifiPppoe,
+	            pnlWifiEnt,
 	            pnlQmi,
 	            pnlMwan,
 	            {

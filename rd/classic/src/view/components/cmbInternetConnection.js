@@ -24,6 +24,7 @@ Ext.define('Rd.view.components.cmbInternetConnection', {
                 {"id":"wifi",           "text": 'WIFI Client'},
                 {"id":"wifi_static",    "text": 'WIFI Client - Static IP Address'},
                 {"id":"wifi_pppoe",     "text": 'WIFI Client - PPPoE'},
+                {"id":"wifi_ent",       "text": 'WIFI Client - WPA-Enterprise'},
                 {"id":'qmi',            "text": 'LTE/4G'},
                 {"id":'mwan',           "text": 'Multi-WAN'},
             ]

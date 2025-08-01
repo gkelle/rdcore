@@ -51,6 +51,10 @@ docker exec -u 0 -it radiusdesk-mariadb /tmp/startup.sh || exit 1
 echo
 echo Building Radiusdesk container with nginx, php-fpm and freeradius ...
 
+# Ensure DB host is set for Docker Compose
+echo "Setting DB host to 'rdmariadb' in app_local.php ..."
+sed -i "s/'host' *=> *'localhost'/'host' => 'rdmariadb'/g" rdcore/cake4/rd_cake/config/app_local.php
+
 docker compose build || exit 1
 docker compose up -d radiusdesk || exit 1
 

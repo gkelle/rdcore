@@ -51,8 +51,8 @@ Ext.define('Rd.controller.cAccessPointViews', {
          
         if (!newTab){
             newTab = tabAps.add({
-                glyph   : Rd.config.icnView, 
-                title   : name,
+                glyph   : Rd.config.icnAdd, 
+                title   : 'More info on: '+name,
                 closable: true,
                 layout  : 'fit',
                 xtype   : 'pnlAccessPointView',

@@ -63,7 +63,8 @@ class AppController extends Controller
          * see https://book.cakephp.org/4/en/controllers/components/form-protection.html
          */
         //$this->loadComponent('FormProtection');
-        $this->loadComponent('Authentication.Authentication');
+        $this->loadComponent('Authentication.Authentication');      
+        $this->loadComponent('Aa');
     }
     
     //--RD tweak 2022 to serve .json and .xml files (but it seems this one is not compulsory
@@ -79,7 +80,13 @@ class AppController extends Controller
         if(!$user){   //If not a valid user
             return;
         }
-        return $user;
+        
+        $rbaAllowed = $this->Aa->checkRbaAccess($user);
+        
+        if (!$rbaAllowed) {
+            return $this->Aa->denyRbaAccess();
+        }       
+        return $rbaAllowed;
     }
      
 }

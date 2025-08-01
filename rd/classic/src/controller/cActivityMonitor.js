@@ -468,7 +468,6 @@ Ext.define('Rd.controller.cActivityMonitor', {
     },
    
     closeOpen : function(button){
-
         var me      = this;
         var grid    = button.up('grid');
         //Find out if there was something selected
@@ -479,40 +478,50 @@ Ext.define('Rd.controller.cActivityMonitor', {
                         Ext.ux.Constants.clsWarn,
                         Ext.ux.Constants.msgWarn
             );
-        }else{
-
-            //________________
-            var extra_params    = {};
-            var s               = grid.getSelectionModel().getSelection();
-            Ext.Array.each(s,function(record){
-                var r_id = record.getId();
-                extra_params[r_id] = r_id;
+        }else{        
+            Ext.MessageBox.confirm('Closing Stale Sessions', 'Make DOUBLE sure the sessions are stale.<br>Do you want to continue?', function(val){
+                if(val== 'yes'){
+                    me.closeAction(button);     
+                }
             });
-     
-            Ext.Ajax.request({
-                url: me.getUrlCloseOpen(),
-                method: 'GET',
-                params: extra_params,
-                success: function(response){
-                    var jsonData    = Ext.JSON.decode(response.responseText);
-                    if(jsonData.success){
-                        Ext.ux.Toaster.msg(
-                                    i18n('sItem_updated'),
-                                    i18n('sItem_updated_fine'),
-                                    Ext.ux.Constants.clsInfo,
-                                    Ext.ux.Constants.msgInfo
-                        );
-                        me.reload();    
-                    }   
-                },
-                scope: me
-            });
-            //_____________________ 
-
-  
         }
-
-
+    },    
+    closeAction : function(button){
+        var me              = this;
+        var grid            = me.getGrid()
+        var extra_params    = {};
+        var s               = grid.getSelectionModel().getSelection();
+        Ext.Array.each(s,function(record){
+            var r_id = record.getId();
+            extra_params[r_id] = r_id;
+        });
+ 
+        Ext.Ajax.request({
+            url: me.getUrlCloseOpen(),
+            method: 'GET',
+            params: extra_params,
+            success: function(response){
+                var jsonData    = Ext.JSON.decode(response.responseText);
+                if(jsonData.success){
+                    Ext.ux.Toaster.msg(
+                                i18n('sItem_updated'),
+                                i18n('sItem_updated_fine'),
+                                Ext.ux.Constants.clsInfo,
+                                Ext.ux.Constants.msgInfo
+                    );  
+                }
+                if(jsonData.success == false){
+                    Ext.ux.Toaster.msg(
+                        'Problem Closing Open Session',
+                        jsonData.message,
+                        Ext.ux.Constants.clsWarn,
+                        Ext.ux.Constants.msgWarn
+                    );                           
+                }
+                me.reload(); //Reload from server   
+            },
+            scope: me
+        });
     },
 
     kickActive: function(button){
@@ -527,80 +536,98 @@ Ext.define('Rd.controller.cActivityMonitor', {
                 Ext.ux.Constants.clsWarn,
                 Ext.ux.Constants.msgWarn
             );
-        }else{
-            Ext.ux.Toaster.msg(
-                'Sending request',
-                'Please be patient',
-                Ext.ux.Constants.clsInfo,
-                Ext.ux.Constants.msgInfo
-            );
-            button.setDisabled(true);
-            //________________
-            var extra_params    = {};
-            var s               = grid.getSelectionModel().getSelection();
-            Ext.Array.each(s,function(record){
-                var r_id = record.getId();
-                extra_params[r_id] = r_id;
+        }else{        
+            Ext.MessageBox.confirm('Terminate Active Session', 'This action will disconnect the user.<br>Do you want to continue?', function(val){
+                if(val== 'yes'){
+                    me.kickAction(button);     
+                }
             });
-    
-            Ext.Ajax.request({
-                url: me.getUrlKickActive(),
-                method: 'GET',
-                params: extra_params,
-                success: function(response){
-                    button.setDisabled(false);
-                    var jsonData    = Ext.JSON.decode(response.responseText);
-                    if(jsonData.success){
-                    
-                        if(jsonData.data !== undefined){
-                            //Data should contain: 'title', 'message' and type
-                            var typeCls = Ext.ux.Constants.clsInfo; //Default is Info
-                            var typeMsg = Ext.ux.Constants.msgInfo;
-                            if(jsonData.data.type == 'warn'){
-                                typeCls = Ext.ux.Constants.clsWarn;
-                                typeMsg = Ext.ux.Constants.msgWarn;
-                            }
-                            if(jsonData.data.type == 'error'){
-                                typeCls = Ext.ux.Constants.clsError;
-                                typeMsg = Ext.ux.Constants.msgError;
-                            }
-                            
-                            Ext.ux.Toaster.msg(
-                                jsonData.data.title,
-                                jsonData.data.message,
-                                typeCls,
-                                typeMsg
-                            );                     
-                        }else{ //If there's nothing specified
-                    
-                            Ext.ux.Toaster.msg(
-                                i18n('sItem_updated'),
-                                i18n('sItem_updated_fine'),
-                                Ext.ux.Constants.clsInfo,
-                                Ext.ux.Constants.msgInfo
-                            );
-                            
-                        }
-                        me.reload();    
-                    }   
-                },
-                failure: function (response, options) {
-                    button.setDisabled(false);
-                    var jsonData = Ext.JSON.decode(response.responseText);
-                    Ext.Msg.show({
-                        title       : "Error",
-                        msg         : response.request.url + '<br>' + response.status + ' ' + response.statusText+"<br>"+jsonData.message,
-                        modal       : true,
-                        buttons     : Ext.Msg.OK,
-                        icon        : Ext.Msg.ERROR,
-                        closeAction : 'destroy'
-                    });
-                },
-                scope: me
-            });
-            //_____________________
         }
     },
+    
+    kickAction  : function(button){
+        var me      = this;
+        var grid    = me.getGrid();       
+        Ext.ux.Toaster.msg(
+            'Sending request',
+            'Please be patient',
+            Ext.ux.Constants.clsInfo,
+            Ext.ux.Constants.msgInfo
+        );
+        button.setDisabled(true);
+        //________________
+        var extra_params    = {};
+        var s               = grid.getSelectionModel().getSelection();
+        Ext.Array.each(s,function(record){
+            var r_id = record.getId();
+            extra_params[r_id] = r_id;
+        });
+
+        Ext.Ajax.request({
+            url: me.getUrlKickActive(),
+            method: 'GET',
+            params: extra_params,
+            success: function(response){
+                button.setDisabled(false);
+                var jsonData    = Ext.JSON.decode(response.responseText);
+                if(jsonData.success){
+                
+                    if(jsonData.data !== undefined){
+                        //Data should contain: 'title', 'message' and type
+                        var typeCls = Ext.ux.Constants.clsInfo; //Default is Info
+                        var typeMsg = Ext.ux.Constants.msgInfo;
+                        if(jsonData.data.type == 'warn'){
+                            typeCls = Ext.ux.Constants.clsWarn;
+                            typeMsg = Ext.ux.Constants.msgWarn;
+                        }
+                        if(jsonData.data.type == 'error'){
+                            typeCls = Ext.ux.Constants.clsError;
+                            typeMsg = Ext.ux.Constants.msgError;
+                        }
+                        
+                        Ext.ux.Toaster.msg(
+                            jsonData.data.title,
+                            jsonData.data.message,
+                            typeCls,
+                            typeMsg
+                        );                     
+                    }else{ //If there's nothing specified
+                
+                        Ext.ux.Toaster.msg(
+                            i18n('sItem_updated'),
+                            i18n('sItem_updated_fine'),
+                            Ext.ux.Constants.clsInfo,
+                            Ext.ux.Constants.msgInfo
+                        );
+                        
+                    }
+                    me.reload();    
+                }
+                if(jsonData.success == false){
+                    Ext.ux.Toaster.msg(
+                        'Problem Kicking User Off',
+                        jsonData.message,
+                        Ext.ux.Constants.clsWarn,
+                        Ext.ux.Constants.msgWarn
+                    );                           
+                }   
+            },
+            failure: function (response, options) {
+                button.setDisabled(false);
+                var jsonData = Ext.JSON.decode(response.responseText);
+                Ext.Msg.show({
+                    title       : "Error",
+                    msg         : response.request.url + '<br>' + response.status + ' ' + response.statusText+"<br>"+jsonData.message,
+                    modal       : true,
+                    buttons     : Ext.Msg.OK,
+                    icon        : Ext.Msg.ERROR,
+                    closeAction : 'destroy'
+                });
+            },
+            scope: me
+        });    
+    },
+    
     usageGraph : function(button){
 
         var me      = this;

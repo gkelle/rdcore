@@ -391,7 +391,7 @@ class VouchersController extends AppController{
 			'activate_on_login',
             'never_expire'
 		];
-		
+				
 		foreach($check_items as $i){
             if(isset($req_d[$i])){
             	if($req_d[$i] == null){
@@ -405,7 +405,7 @@ class VouchersController extends AppController{
         }
         
         //If it is expiring; set it in the correct format
-        if($req_d['never_expire'] == 0){
+        if(($req_d['never_expire'] == 0)&&(isset($req_d['expire']))){
             $newDate = date_create_from_format('m/d/Y', $req_d['expire']);
             $req_d['expire'] = $newDate;
         }
@@ -893,28 +893,29 @@ class VouchersController extends AppController{
         if(!$user){   //If not a valid user
             return;
         }
-        $right = $this->Aa->rights_on_cloud();
-        
-        $menu = $this->GridButtonsFlat->returnButtons(false,'vouchers',$right);
-        $this->set(array(
-            'items'         => $menu,
-            'success'       => true
-        ));
+        $right  = $this->Aa->rights_on_cloud(); 
+        $right  = 'admin';      
+        $menu   = $this->GridButtonsFlat->returnButtons(false,'vouchers',$right);
+        $this->set([
+            'items'     => $menu,
+            'success'   => true
+        ]);
         $this->viewBuilder()->setOption('serialize', true); 
     }
 
     function menuForAccountingData(){
 
-       $user = $this->Aa->user_for_token($this);
+        $user = $this->Aa->user_for_token($this);
         if(!$user){   //If not a valid user
             return;
-        }
+        }               
+        $right  = $this->Aa->rights_on_cloud();
+        $menu   = $this->GridButtonsFlat->returnButtons(true,'FrAcctAndAuth',$right);
         
-        $menu = $this->GridButtonsFlat->returnButtons(false,'fr_acct_and_auth');
-        $this->set(array(
-            'items'         => $menu,
-            'success'       => true
-        ));
+        $this->set([
+            'items'     => $menu,
+            'success'   => true
+        ]);
         $this->viewBuilder()->setOption('serialize', true); 
     }
 }
