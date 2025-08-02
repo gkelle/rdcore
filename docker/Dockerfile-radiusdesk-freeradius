@@ -2,7 +2,7 @@ ARG RADIUS_VERSION=3.2.7
 
 FROM gkelle/freeradius-server:${RADIUS_VERSION}
 
-ARG RADIUSDESK_FREERADIUS_TAR_URL=https://github.com/RADIUSdesk/rdcore/raw/913e00f7a8438251b942c768c093a13d2331f17b/cake4/rd_cake/setup/radius/freeradius.dec.24.tar.gz
+ARG RADIUSDESK_FREERADIUS_TAR_URL=https://github.com/RADIUSdesk/rdcore/raw/a0d6907ccbc4f08734638e3882ef94b910090d0c/cake4/rd_cake/setup/radius/freeradius-radiusdesk.tar.gz
 
 RUN <<EOF
 rm -fr /etc/freeradius
@@ -30,7 +30,7 @@ COPY patches/radius/ /etc/freeradius/patches
 COPY scripts/radius/ppsk_ft.pl /etc/freeradius/mods-config/perl/ppsk_ft.pl
 
 RUN <<EOF
-find /etc/freeradius/patches -type f -print0 | xargs -0 -n 1 patch -p1 -d /etc/freeradius -i
+find /etc/freeradius/patches -type f -name '*.patch' -print0 | xargs -0 -n 1 patch -p1 -d /etc/freeradius -i
 ln -sf ../mods-available/pl_ppsk_ft /etc/freeradius/mods-enabled/pl_ppsk_ft
 sed -i 's;/etc/freeradius/3.0;/etc/freeradius;' /etc/freeradius/dictionary /etc/freeradius/radiusd.conf
 touch /etc/freeradius/mods-available/pl_ppsk_ft

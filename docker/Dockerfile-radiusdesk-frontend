@@ -1,5 +1,5 @@
 FROM docker.io/gkelle/radiusdesk-php:8.3
-    ARG RADIUS_TAR=/var/www/rdcore/cake4/rd_cake/setup/radius/freeradius.dec.24.tar.gz
+    ARG RADIUS_TAR=/var/www/rdcore/cake4/rd_cake/setup/radius/freeradius-radiusdesk.tar.gz
     ARG MAINLINE_GIT_VERSION_HASH=unspecified
     ARG GIT_VERSION_HASH=unspecified
 
@@ -21,14 +21,14 @@ FROM docker.io/gkelle/radiusdesk-php:8.3
         mkdir -p /var/www/html/cake4/rd_cake/logs && \
         mkdir -p /var/www/html/cake4/rd_cake/webroot/files/imagecache && \
         mkdir -p /var/www/html/cake4/rd_cake/tmp && \
-        chown -R www-data. /var/www/html/cake4/rd_cake/tmp && \
-        chown -R www-data. /var/www/html/cake4/rd_cake/logs && \
-        chown -R www-data. /var/www/html/cake4/rd_cake/webroot/img/realms && \
-        chown -R www-data. /var/www/html/cake4/rd_cake/webroot/img/dynamic_details && \
-        chown -R www-data. /var/www/html/cake4/rd_cake/webroot/img/dynamic_photos && \
-        chown -R www-data. /var/www/html/cake4/rd_cake/webroot/img/access_providers && \
-        chown -R www-data. /var/www/html/cake4/rd_cake/webroot/img/hardwares && \
-        chown -R www-data. /var/www/html/cake4/rd_cake/webroot/files/imagecache && \
+        chown -R www-data: /var/www/html/cake4/rd_cake/tmp && \
+        chown -R www-data: /var/www/html/cake4/rd_cake/logs && \
+        chown -R www-data: /var/www/html/cake4/rd_cake/webroot/img/realms && \
+        chown -R www-data: /var/www/html/cake4/rd_cake/webroot/img/dynamic_details && \
+        chown -R www-data: /var/www/html/cake4/rd_cake/webroot/img/dynamic_photos && \
+        chown -R www-data: /var/www/html/cake4/rd_cake/webroot/img/access_providers && \
+        chown -R www-data: /var/www/html/cake4/rd_cake/webroot/img/hardwares && \
+        chown -R www-data: /var/www/html/cake4/rd_cake/webroot/files/imagecache && \
         cp /var/www/html/cake4/rd_cake/setup/cron/cron4 /etc/cron.d/ && \
         chmod 0644 /etc/cron.d/cron4 && \
         crontab /etc/cron.d/cron4 && \
@@ -52,6 +52,7 @@ FROM docker.io/gkelle/radiusdesk-php:8.3
 
     # Only expose radiusdesk web front end to Teaefik and Freeradius UDP ports that bypass traefik
     EXPOSE 80/tcp
+    EXPOSE 443/tcp
 
     ENV PHP_INI_SCAN_DIR=:/p/gd:/p/pdo_sqlite
     ENV PHP.cgi.fix_pathinfo=1
