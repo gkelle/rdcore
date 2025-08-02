@@ -1,0 +1,36 @@
+--- a/var/www/rdcore/cake4/rd_cake/src/Template/Vouchers/export_pdf.php
++++ b/var/www/rdcore/cake4/rd_cake/src/Template/Vouchers/export_pdf.php
+@@ -62,6 +62,7 @@ if(($output_instr['format'] == 'a4')||($output_instr['format'] == 'a4_page')){
+         } 
+     }
+     //Close and output PDF document
++    ob_end_clean();
+     $pdf->Output('test.pdf', 'I');
+     
+ }else{
+@@ -77,6 +78,7 @@ if(($output_instr['format'] == 'a4')||($output_instr['format'] == 'a4_page')){
+             $pdf->Add_Label($v);
+         }
+     } 
++    ob_end_clean();
+     $pdf->Output('test.pdf', 'I');
+ }
+        
+--- a/var/www/rdcore/cake4/rd_cake/templates/Vouchers/export_pdf.php
++++ b/var/www/rdcore/cake4/rd_cake/templates/Vouchers/export_pdf.php
+@@ -62,6 +62,7 @@ if(($output_instr['format'] == 'a4')||($output_instr['format'] == 'a4_page')){
+         } 
+     }
+     //Close and output PDF document
++    ob_end_clean();
+     $pdf->Output('test.pdf', 'I');
+     
+ }else{
+@@ -77,6 +78,7 @@ if(($output_instr['format'] == 'a4')||($output_instr['format'] == 'a4_page')){
+             $pdf->Add_Label($v);
+         }
+     } 
++    ob_end_clean();
+     $pdf->Output('test.pdf', 'I');
+ }
+        
