@@ -3,6 +3,8 @@ ARG RADIUS_VERSION=3.2.7
 FROM gkelle/freeradius-server:${RADIUS_VERSION}
 
 ARG RADIUSDESK_FREERADIUS_TAR_URL=https://github.com/RADIUSdesk/rdcore/raw/a0d6907ccbc4f08734638e3882ef94b910090d0c/cake4/rd_cake/setup/radius/freeradius-radiusdesk.tar.gz
+ARG MAINLINE_GIT_VERSION_HASH=unspecified
+ARG GIT_VERSION_HASH=unspecified
 
 RUN <<EOF
 rm -fr /etc/freeradius
@@ -41,6 +43,8 @@ cat <<-'INNEREOF' > /etc/freeradius/mods-available/pl_ppsk_ft
 	}
 	INNEREOF
 EOF
+
+RUN echo $GIT_VERSION_HASH > /GIT_VERSION_HASH.txt && echo $MAINLINE_GIT_VERSION_HASH > /MAINLINE_GIT_VERSION_HASH.txt
 
 ENV RD_RADIUS_SECRET="testing123"
 ENV RD_DB_SERVER="rdmariadb"
