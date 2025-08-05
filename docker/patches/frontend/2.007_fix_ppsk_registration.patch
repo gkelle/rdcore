@@ -1,0 +1,12 @@
+--- a/var/www/rdcore/login/bootstrap5/js/sConnect.js
++++ b/var/www/rdcore/login/bootstrap5/js/sConnect.js
+@@ -1856,6 +1856,9 @@ var sConnect = (function () {
+                     phone         : $("#txtrCell").val(),
+                     i18n          : s_i18n
+                 };
++                if(cDynamicData.settings.reg_ppsk){
++                   formData['ppsk'] = $("#txtrPPSK").val();
++                }
+ 
+ /*
+                 //=== Proof of Concept Hack ===
