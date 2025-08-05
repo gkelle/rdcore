@@ -1,0 +1,26 @@
+--- a/var/www/rdcore/cake4/rd_cake/src/Controller/RegisterUsersController.php
++++ b/var/www/rdcore/cake4/rd_cake/src/Controller/RegisterUsersController.php
+@@ -64,6 +64,23 @@ class RegisterUsersController extends AppController {
+ 			        return;	        
+ 		        }		        		    
+ 		    }
++		    elseif($q_r->reg_rb_vlan === 'pre_select'){
++		        $realm_id  = $q_r->realm_id;
++		        $target_realm_vlan_id = $q_r->realm_vlan_id;
++		        if($target_realm_vlan_id != 0){
++		            $q_r_vlans = $this->{'RealmVlans'}->find()->where(['RealmVlans.realm_id' => $realm_id, 'RealmVlans.id' => $target_realm_vlan_id])->all();
++		            if(count($q_r_vlans) == 1){
++		                $realm_vlan_id = $q_r->realm_vlan_id;
++		            }else{
++		                $this->set([
++			                    'success'   => false,
++			                    'errors'	=> ['VLAN' => 'Unable to find pre-selected VLAN']
++			            ]);
++			            $this->viewBuilder()->setOption('serialize', true);
++			            return;
++		            }
++		        }
++		    }
+ 		    if(!$q_r){
+ 		         $this->set([
+ 				    'success'   => false,
