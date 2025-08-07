@@ -1,4 +1,5 @@
-FROM docker.io/gkelle/radiusdesk-php:8.3
+    ARG PHP_VERSION=8.1
+FROM docker.io/gkelle/radiusdesk-php:${PHP_VERSION}
     ARG RADIUS_TAR=/var/www/rdcore/cake4/rd_cake/setup/radius/freeradius-radiusdesk.tar.gz
     ARG MAINLINE_GIT_VERSION_HASH=unspecified
     ARG GIT_VERSION_HASH=unspecified
