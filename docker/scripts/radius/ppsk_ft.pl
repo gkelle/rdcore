@@ -318,46 +318,50 @@ sub ppsk {
 
     if(defined $RAD_REQUEST{'NAS-Identifier'} && length $RAD_REQUEST{'NAS-Identifier'} > 0) {
     
-        my $realm_id = 0;
+        my $realm_id_tmp = 0;
+        my @realm_ids = ();
         if ( ! $dbh->ping ) {
             CLONE();
         }
         $stmt_realm_id->execute($RAD_REQUEST{'NAS-Identifier'});     
         while(my $row = $stmt_realm_id->fetchrow_hashref()){        
-            $realm_id = $row->{'id'};
+            $realm_id_tmp = $row->{'id'};
+            push(@realm_ids, $realm_id_tmp);
         }
         $stmt_realm_id->finish();
         
-        if(($ssid)&&($realm_id)){
-            &radiusd::radlog("2", "Found Realm ID $realm_id and ssid $ssid. We can try to get the realm_ssid ID");
-            
-            #Get the realm_ssid id
-            my $ssid_id = 0;
-            $stmt_ssid_id->execute($ssid,$realm_id);        
-            while(my $row = $stmt_ssid_id->fetchrow_hashref()){        
-                $ssid_id = $row->{'id'};
-            }
-            $stmt_ssid_id->finish();
-            
-            if($ssid_id){
-                &radiusd::radlog("2", "Found Realm ID $realm_id and ssid_id $ssid_id. We can try to get the LIST OF PPSKs");
-                $stmt_pmk_list->execute($ssid_id,$realm_id); 
-                my $match_found = 0;            
-                while(my $row = $stmt_pmk_list->fetchrow_hashref()){
-                    if(process_row(lc($ap_mac),lc($sa_mac),$EAPOL1,$EAPOL2,$ssid,$row->{'ppsk'},$row)){
-                        #Formulate the reply
-                        formulate_reply($row,$realm_id);
-                        $match_found = 1;
-                        last;
-                    }
+        if(($ssid)&&($realm_id_tmp)){
+            my $match_found = 0;            
+            OUTERLOOP: for my $realm_id (@realm_ids) {
+                &radiusd::radlog("2", "Found Realm ID $realm_id and ssid $ssid. We can try to get the realm_ssid ID");
+                
+                #Get the realm_ssid id
+                my $ssid_id = 0;
+                $stmt_ssid_id->execute($ssid,$realm_id);        
+                while(my $row = $stmt_ssid_id->fetchrow_hashref()){        
+                    $ssid_id = $row->{'id'};
                 }
-                $stmt_pmk_list->finish();
-                if($match_found == 0){
-                    $RAD_REPLY{'Reply-Message'} = "No PPSK Match Found";
-                    $return = RLM_MODULE_REJECT;               
-                }            
-            }                     
-        }        
+                $stmt_ssid_id->finish();
+                
+                if($ssid_id){
+                    &radiusd::radlog("2", "Found Realm ID $realm_id and ssid_id $ssid_id. We can try to get the LIST OF PPSKs");
+                    $stmt_pmk_list->execute($ssid_id,$realm_id); 
+                    while(my $row = $stmt_pmk_list->fetchrow_hashref()){
+                        if(process_row(lc($ap_mac),lc($sa_mac),$EAPOL1,$EAPOL2,$ssid,$row->{'ppsk'},$row)){
+                            #Formulate the reply
+                            formulate_reply($row,$realm_id);
+                            $match_found = 1;
+                            last OUTERLOOP;
+                        }
+                    }
+                    $stmt_pmk_list->finish();
+                }
+            }
+            if($match_found == 0){
+                $RAD_REPLY{'Reply-Message'} = "No PPSK Match Found";
+                $return = RLM_MODULE_REJECT;               
+            }
+        }
     }
 }
 
