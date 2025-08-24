@@ -6,13 +6,13 @@ begin
 
 
 if not exists (select * from information_schema.columns
-    where column_name = 'apply_to_all' and table_name = 'ap_profile_entries' and table_schema = 'rd') then
+    where column_name = 'apply_to_all' and table_name = 'ap_profile_entries' and table_schema = DATABASE()) then
     alter table ap_profile_entries add column `apply_to_all` tinyint(1) NOT NULL DEFAULT '1';
 end if;
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'ap_ap_profile_entries' and table_schema = 'rd') then
+    where table_name = 'ap_ap_profile_entries' and table_schema = DATABASE()) then
     CREATE TABLE `ap_ap_profile_entries` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `ap_id` int(11) NOT NULL,
@@ -27,7 +27,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'ap_static_entry_overrides' and table_schema = 'rd') then
+    where table_name = 'ap_static_entry_overrides' and table_schema = DATABASE()) then
     CREATE TABLE `ap_static_entry_overrides` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `ap_id` int(11) NOT NULL,

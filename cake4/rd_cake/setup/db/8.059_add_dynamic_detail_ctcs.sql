@@ -5,7 +5,7 @@ create procedure add_dynamic_detail_ctcs()
 begin
 
 if not exists (select * from information_schema.columns
-    where table_name = 'dynamic_detail_ctcs' and table_schema = 'rd') then	
+    where table_name = 'dynamic_detail_ctcs' and table_schema = DATABASE()) then	
     CREATE TABLE IF NOT EXISTS `dynamic_detail_ctcs` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `dynamic_detail_id` int(11) DEFAULT NULL,
@@ -59,62 +59,62 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'first_name' and table_name = 'data_collectors' and table_schema = 'rd') then
+    where column_name = 'first_name' and table_name = 'data_collectors' and table_schema = DATABASE()) then
     alter table data_collectors add column `first_name` char(50) NOT NULL DEFAULT '';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'last_name' and table_name = 'data_collectors' and table_schema = 'rd') then
+    where column_name = 'last_name' and table_name = 'data_collectors' and table_schema = DATABASE()) then
     alter table data_collectors add column `last_name` char(50) NOT NULL DEFAULT '';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'gender' and table_name = 'data_collectors' and table_schema = 'rd') then
+    where column_name = 'gender' and table_name = 'data_collectors' and table_schema = DATABASE()) then
     alter table data_collectors add column `gender` enum('male','female','not_recorded') DEFAULT 'not_recorded';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'birthday' and table_name = 'data_collectors' and table_schema = 'rd') then
+    where column_name = 'birthday' and table_name = 'data_collectors' and table_schema = DATABASE()) then
     alter table data_collectors add column `birthday` datetime DEFAULT NULL;
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'company' and table_name = 'data_collectors' and table_schema = 'rd') then
+    where column_name = 'company' and table_name = 'data_collectors' and table_schema = DATABASE()) then
     alter table data_collectors add column `company` char(50) NOT NULL DEFAULT '';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'address' and table_name = 'data_collectors' and table_schema = 'rd') then
+    where column_name = 'address' and table_name = 'data_collectors' and table_schema = DATABASE()) then
     alter table data_collectors add column `address` char(50) NOT NULL DEFAULT '';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'city' and table_name = 'data_collectors' and table_schema = 'rd') then
+    where column_name = 'city' and table_name = 'data_collectors' and table_schema = DATABASE()) then
     alter table data_collectors add column `city` char(50) NOT NULL DEFAULT '';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'country' and table_name = 'data_collectors' and table_schema = 'rd') then
+    where column_name = 'country' and table_name = 'data_collectors' and table_schema = DATABASE()) then
     alter table data_collectors add column `country` char(50) NOT NULL DEFAULT '';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'room' and table_name = 'data_collectors' and table_schema = 'rd') then
+    where column_name = 'room' and table_name = 'data_collectors' and table_schema = DATABASE()) then
     alter table data_collectors add column `room` char(50) NOT NULL DEFAULT '';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'custom1' and table_name = 'data_collectors' and table_schema = 'rd') then
+    where column_name = 'custom1' and table_name = 'data_collectors' and table_schema = DATABASE()) then
     alter table data_collectors add column `custom1` char(50) NOT NULL DEFAULT '';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'custom2' and table_name = 'data_collectors' and table_schema = 'rd') then
+    where column_name = 'custom2' and table_name = 'data_collectors' and table_schema = DATABASE()) then
     alter table data_collectors add column `custom2` char(50) NOT NULL DEFAULT '';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'custom3' and table_name = 'data_collectors' and table_schema = 'rd') then
+    where column_name = 'custom3' and table_name = 'data_collectors' and table_schema = DATABASE()) then
     alter table data_collectors add column `custom3` char(50) NOT NULL DEFAULT '';
 end if;
 

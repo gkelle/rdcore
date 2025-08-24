@@ -3,7 +3,8 @@ Ext.define('Rd.view.meshes.vcMeshNodeGeneric', {
     alias   : 'controller.vcMeshNodeGeneric',
     config : {
         urlAdvancedSettingsForModel : '/cake4/rd_cake/meshes/advanced_settings_for_model.json',
-        urlViewNode : '/cake4/rd_cake/meshes/mesh-node-view.json'
+        urlViewNode                 : '/cake4/rd_cake/meshes/mesh-node-view.json',
+        changedLoad                 : false  
     },
     init: function() {
         var me = this;
@@ -138,13 +139,52 @@ Ext.define('Rd.view.meshes.vcMeshNodeGeneric', {
         }
     },
     onCmbMeshChange : function(cmb){
-        var me      = this;
+        var me      = this;        
+        var meshId  = cmb.getValue()      
         var form    = cmb.up('form');
+        me.setChangedLoad(true);
+        form.setLoading();
+        //Note we dont (yet) use this in the Mesh setups but we do it the same as with APdesk
+        var s       = Ext.create('Ext.data.Store', {
+            fields: ['id', 'name'],
+            proxy: {
+                type    : 'ajax',
+                format  : 'json',
+                batchActions: true,
+                url     : '/cake4/rd_cake/meshes/static_entry_options.json',
+                reader: {
+                    type: 'json',
+                    rootProperty: 'items',
+                    messageProperty: 'message'
+                }
+            },
+            autoLoad: false
+        });
+                
+        s.getProxy().setExtraParams({mesh_id: cmb.getValue(),add_no_exit : true});
+        s.reload({
+            callback: function(records, op, success) {
+                me.guiPrepTwo(form,s,meshId);
+            }
+        });               
+    },
+    
+    guiPrepTwo  : function(form,s,meshId){
+        var me = this;      
         var cmbSe   = form.down('tagStaticEntries');
         cmbSe.setValue(''); // Clear the values if there were perhaps some selected
-        cmbSe.getStore().getProxy().setExtraParam('mesh_id',cmb.getValue());
-        cmbSe.getStore().load();
+        cmbSe.getStore().getProxy().setExtraParam('mesh_id',meshId);
+        cmbSe.getStore().load({
+            callback: function(records, op, success) {             
+                if(form.nodeId > 0){
+                    me.loadBasicSettings(form); //Now that everything is loaded for the specific profile we can reload the screen's data                 
+                }else{
+                    form.setLoading(false);
+                }
+            }
+        });    
     },
+      
     onCmbHardwareOptionsChange: function(cmb){
      
 		var me      = this;
@@ -235,6 +275,9 @@ Ext.define('Rd.view.meshes.vcMeshNodeGeneric', {
                         var rec     = Ext.create('Rd.model.mAp', {name: b.result.data.schedule_name, id: b.result.data.schedule_id});
                         cmb.getStore().loadData([rec],false);
                         cmb.setValue(b.result.data.schedule_id);
+                    }
+                    if(me.getChangedLoad()){
+                        form.setLoading(false);
                     }
                 }
             });    

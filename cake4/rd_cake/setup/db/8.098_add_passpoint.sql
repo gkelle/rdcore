@@ -5,7 +5,7 @@ create procedure add_passpoint()
 begin
 
 if not exists (select * from information_schema.columns
-    where table_name = 'passpoint_profiles' and table_schema = 'rd') then
+    where table_name = 'passpoint_profiles' and table_schema = DATABASE()) then
      CREATE TABLE `passpoint_profiles` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `name` char(64) NOT NULL,
@@ -21,7 +21,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'passpoint_domains' and table_schema = 'rd') then
+    where table_name = 'passpoint_domains' and table_schema = DATABASE()) then
      CREATE TABLE `passpoint_domains` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `passpoint_profile_id` int(11) DEFAULT NULL, 
@@ -35,7 +35,7 @@ end if;
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'passpoint_nai_realms' and table_schema = 'rd') then
+    where table_name = 'passpoint_nai_realms' and table_schema = DATABASE()) then
      CREATE TABLE `passpoint_nai_realms` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `passpoint_profile_id` int(11) DEFAULT NULL, 
@@ -49,7 +49,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'passpoint_eap_methods' and table_schema = 'rd') then
+    where table_name = 'passpoint_eap_methods' and table_schema = DATABASE()) then
      CREATE TABLE `passpoint_eap_methods` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `name` varchar(25) NOT NULL,
@@ -68,7 +68,7 @@ end if;
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'passpoint_nai_realm_passpoint_eap_methods' and table_schema = 'rd') then
+    where table_name = 'passpoint_nai_realm_passpoint_eap_methods' and table_schema = DATABASE()) then
      CREATE TABLE `passpoint_nai_realm_passpoint_eap_methods` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `passpoint_nai_realm_id` int(11) DEFAULT NULL, 
@@ -81,7 +81,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'passpoint_rcois' and table_schema = 'rd') then
+    where table_name = 'passpoint_rcois' and table_schema = DATABASE()) then
      CREATE TABLE `passpoint_rcois` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `passpoint_profile_id` int(11) DEFAULT NULL, 
@@ -95,7 +95,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'passpoint_cell_networks' and table_schema = 'rd') then
+    where table_name = 'passpoint_cell_networks' and table_schema = DATABASE()) then
      CREATE TABLE `passpoint_cell_networks` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `passpoint_profile_id` int(11) DEFAULT NULL, 
@@ -111,7 +111,7 @@ end if;
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'passpoint_network_types' and table_schema = 'rd') then
+    where table_name = 'passpoint_network_types' and table_schema = DATABASE()) then
      CREATE TABLE `passpoint_network_types` (
         `id` int(11) NOT NULL,
         `name` varchar(40) NOT NULL,
@@ -128,7 +128,7 @@ end if;
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'passpoint_venue_groups' and table_schema = 'rd') then
+    where table_name = 'passpoint_venue_groups' and table_schema = DATABASE()) then
      CREATE TABLE `passpoint_venue_groups` (
         `id` int(11) NOT NULL,
         `name` varchar(40) NOT NULL,
@@ -144,7 +144,7 @@ end if;
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'passpoint_venue_group_types' and table_schema = 'rd') then
+    where table_name = 'passpoint_venue_group_types' and table_schema = DATABASE()) then
      CREATE TABLE `passpoint_venue_group_types` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `name` varchar(40) NOT NULL,
@@ -162,7 +162,7 @@ end if;
       
 
 if not exists (select * from information_schema.columns
-    where table_name = 'passpoint_profile_settings' and table_schema = 'rd') then
+    where table_name = 'passpoint_profile_settings' and table_schema = DATABASE()) then
      CREATE TABLE `passpoint_profile_settings` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `passpoint_profile_id` int(11) DEFAULT NULL, 
@@ -176,7 +176,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'passpoint_uplinks' and table_schema = 'rd') then
+    where table_name = 'passpoint_uplinks' and table_schema = DATABASE()) then
     CREATE TABLE `passpoint_uplinks` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `cloud_id` int(11) DEFAULT NULL,
@@ -203,7 +203,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'realm_passpoint_profiles' and table_schema = 'rd') then
+    where table_name = 'realm_passpoint_profiles' and table_schema = DATABASE()) then
     CREATE TABLE `realm_passpoint_profiles` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `realm_id` int(11) DEFAULT NULL,
@@ -223,7 +223,7 @@ end if;
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'realm_passpoint_nai_realms' and table_schema = 'rd') then
+    where table_name = 'realm_passpoint_nai_realms' and table_schema = DATABASE()) then
      CREATE TABLE `realm_passpoint_nai_realms` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `realm_passpoint_profile_id` int(11) DEFAULT NULL, 
@@ -235,7 +235,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'realm_passpoint_rcois' and table_schema = 'rd') then
+    where table_name = 'realm_passpoint_rcois' and table_schema = DATABASE()) then
      CREATE TABLE `realm_passpoint_rcois` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `realm_passpoint_profile_id` int(11) DEFAULT NULL, 
@@ -249,11 +249,11 @@ if not exists (select * from information_schema.columns
 end if;
 
 
-if not exists (select * from information_schema.columns where column_name = 'passpoint_uplink_id' and table_name = 'aps' and table_schema = 'rd') then
+if not exists (select * from information_schema.columns where column_name = 'passpoint_uplink_id' and table_name = 'aps' and table_schema = DATABASE()) then
 	alter table aps add column passpoint_uplink_id int(11) DEFAULT NULL;
 end if;
 
-if not exists (select * from information_schema.columns where column_name = 'passpoint_uplink_id' and table_name = 'nodes' and table_schema = 'rd') then
+if not exists (select * from information_schema.columns where column_name = 'passpoint_uplink_id' and table_name = 'nodes' and table_schema = DATABASE()) then
 	alter table nodes add column passpoint_uplink_id int(11) DEFAULT NULL;
 end if;
 
@@ -262,12 +262,12 @@ alter table aps modify column gateway enum('none','lan','3g','wifi','wifi_static
 alter table nodes modify column gateway enum('none','lan','3g','wifi','wifi_static','wifi_ppp','wifi_pppoe','wifi_ent','wan_static','wan_ppp','wan_pppoe', 'mwan') DEFAULT 'none';
 
 if not exists (select * from information_schema.columns
-    where column_name = 'passpoint_profile_id' and table_name = 'ap_profile_entries' and table_schema = 'rd') then
+    where column_name = 'passpoint_profile_id' and table_name = 'ap_profile_entries' and table_schema = DATABASE()) then
     alter table ap_profile_entries add column `passpoint_profile_id` int(11) DEFAULT NULL;
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'passpoint_profile_id' and table_name = 'mesh_entries' and table_schema = 'rd') then
+    where column_name = 'passpoint_profile_id' and table_name = 'mesh_entries' and table_schema = DATABASE()) then
     alter table mesh_entries add column `passpoint_profile_id` int(11) DEFAULT NULL;
 end if;
 

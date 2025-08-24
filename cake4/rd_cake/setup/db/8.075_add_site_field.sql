@@ -5,7 +5,7 @@ create procedure add_site_field()
 begin
 
 if not exists (select * from information_schema.columns
-    where column_name = 'site' and table_name = 'permanent_users' and table_schema = 'rd') then
+    where column_name = 'site' and table_name = 'permanent_users' and table_schema = DATABASE()) then
     alter table permanent_users add column `site` varchar(100) NOT NULL DEFAULT '';
 end if;
 

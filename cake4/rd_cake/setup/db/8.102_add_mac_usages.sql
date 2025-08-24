@@ -5,7 +5,7 @@ create procedure add_mac_usages()
 begin
 
 if not exists (select * from information_schema.columns
-    where table_name = 'mac_usages' and table_schema = 'rd') then  
+    where table_name = 'mac_usages' and table_schema = DATABASE()) then  
     CREATE TABLE `mac_usages` (
       `id` int(10) NOT NULL AUTO_INCREMENT,
       `mac` varchar(17) NOT NULL,

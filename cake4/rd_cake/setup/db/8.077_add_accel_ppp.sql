@@ -5,7 +5,7 @@ create procedure add_accel_ppp()
 begin
 
 if not exists (select * from information_schema.columns
-    where table_name = 'accel_servers' and table_schema = 'rd') then
+    where table_name = 'accel_servers' and table_schema = DATABASE()) then
 	CREATE TABLE `accel_servers` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `cloud_id` int(11) NOT NULL,
@@ -27,7 +27,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'accel_profiles' and table_schema = 'rd') then
+    where table_name = 'accel_profiles' and table_schema = DATABASE()) then
 	CREATE TABLE `accel_profiles` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `cloud_id` int(11) NOT NULL,
@@ -41,7 +41,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'accel_profile_entries' and table_schema = 'rd') then
+    where table_name = 'accel_profile_entries' and table_schema = DATABASE()) then
 	CREATE TABLE `accel_profile_entries` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `accel_profile_id` int(11) NOT NULL,
@@ -57,7 +57,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'accel_stats' and table_schema = 'rd') then
+    where table_name = 'accel_stats' and table_schema = DATABASE()) then
 	CREATE TABLE `accel_stats` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `accel_server_id` int(11) NOT NULL,
@@ -80,7 +80,7 @@ end if;
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'accel_sessions' and table_schema = 'rd') then
+    where table_name = 'accel_sessions' and table_schema = DATABASE()) then
 	CREATE TABLE `accel_sessions` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `accel_server_id` int(11) NOT NULL,
@@ -117,7 +117,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'accel_arrivals' and table_schema = 'rd') then
+    where table_name = 'accel_arrivals' and table_schema = DATABASE()) then
         CREATE TABLE `accel_arrivals` (
       `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
       `mac` varchar(255) NOT NULL,
@@ -136,7 +136,7 @@ alter table ap_profile_exits modify `type` enum('bridge','tagged_bridge','nat','
 alter table mesh_exits modify `type` enum('bridge','tagged_bridge','nat','captive_portal','openvpn_bridge','tagged_bridge_l3','pppoe_server') DEFAULT NULL; 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'mesh_exit_pppoe_servers' and table_schema = 'rd') then
+    where table_name = 'mesh_exit_pppoe_servers' and table_schema = DATABASE()) then
         CREATE TABLE `mesh_exit_pppoe_servers` (
       `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
       `mesh_exit_id` int(11) NOT NULL,
@@ -148,7 +148,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'ap_profile_exit_pppoe_servers' and table_schema = 'rd') then
+    where table_name = 'ap_profile_exit_pppoe_servers' and table_schema = DATABASE()) then
         CREATE TABLE `ap_profile_exit_pppoe_servers` (
       `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
       `ap_profile_exit_id` int(11) NOT NULL,

@@ -6,7 +6,7 @@ begin
 
 
 if exists (select * from information_schema.columns
-    where column_name = 'authenticated' and table_name = 'ap_stations' and table_schema = 'rd') then
+    where column_name = 'authenticated' and table_name = 'ap_stations' and table_schema = DATABASE()) then
     drop table `ap_stations`;
     CREATE TABLE `ap_stations` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -36,7 +36,7 @@ if exists (select * from information_schema.columns
 end if;
 
 if exists (select * from information_schema.columns
-    where column_name = 'authenticated' and table_name = 'node_stations' and table_schema = 'rd') then
+    where column_name = 'authenticated' and table_name = 'node_stations' and table_schema = DATABASE()) then
     drop table `node_stations`;
     CREATE TABLE `node_stations` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -68,7 +68,7 @@ end if;
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'node_station_hourlies' and table_schema = 'rd') then
+    where table_name = 'node_station_hourlies' and table_schema = DATABASE()) then
     CREATE TABLE `node_station_hourlies` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `node_id` int(11) DEFAULT NULL,
@@ -93,7 +93,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'ap_station_hourlies' and table_schema = 'rd') then
+    where table_name = 'ap_station_hourlies' and table_schema = DATABASE()) then
     CREATE TABLE `ap_station_hourlies` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `ap_id` int(11) DEFAULT NULL,

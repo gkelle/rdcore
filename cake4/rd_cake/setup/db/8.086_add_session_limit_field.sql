@@ -5,7 +5,7 @@ create procedure add_session_limit_field()
 begin
 
 if not exists (select * from information_schema.columns
-    where column_name = 'session_limit' and table_name = 'permanent_users' and table_schema = 'rd') then
+    where column_name = 'session_limit' and table_name = 'permanent_users' and table_schema = DATABASE()) then
     alter table permanent_users add column `session_limit` int(4) NOT NULL DEFAULT 0;
 end if;
 

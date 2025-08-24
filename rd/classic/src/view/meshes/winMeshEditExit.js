@@ -20,8 +20,7 @@ Ext.define('Rd.view.meshes.winMeshEditExit', {
             border: false
     },
     listeners   : {
-        afterrender : 'onAfterRender',
-        beforeshow  : 'loadExit'
+        afterrender  : 'loadExit'
     },
     requires: [
         'Ext.tab.Panel',
@@ -41,7 +40,9 @@ Ext.define('Rd.view.meshes.winMeshEditExit', {
     ],
     controller  : 'vcMeshExitPoint',
     initComponent: function() {
-        var me = this;
+    
+        var me      = this;
+        var hMargin = 10;
 
         //Set the combo
         var tagConnectWith = Ext.create('Rd.view.meshes.tagMeshEntryPoints',{
@@ -179,65 +180,6 @@ Ext.define('Rd.view.meshes.winMeshEditExit', {
                 name        : 'dnsparanoia',
                 inputValue  : 'dnsparanoia',
                 checked     : false
-            },
-            {
-                itemId      : 'chkDnsDesk',
-                xtype       : 'checkbox',      
-                boxLabel  	: 'Use DNS Ident',
-                boxLabelCls	: 'boxLabelRd',
-                name        : 'dnsdesk',
-                inputValue  : 'dnsdesk',
-                checked     : false,
-                listeners   : {
-		            change  : 'onChkDnsDeskChange'
-		        }
-            },
-            {
-                xtype       : 'fieldset',
-                title       : 'DNS Ident Settings',
-                hidden      : true,
-                disabled    : true,
-                itemId      : 'fsDnsIdent',
-                defaultType : 'textfield',
-                margin      : 10,
-                defaults    : {
-                    anchor: '100%'
-                },
-                items: [
-                    { 
-                        allowBlank  : false, 
-                        fieldLabel  : 'IP Address',
-                        labelClsExtra: 'lblRdReq', 
-                        name        : 'dns_ident_ip',
-                        itemId      : 'DnsIdentIp',
-                        disabled    : true
-                    },
-                    { 
-                        allowBlank  : false, 
-                        fieldLabel  : 'Operator Name',
-                        labelClsExtra: 'lblRdReq', 
-                        name        : 'dns_ident_op_name',
-                        itemId      : 'DnsIdentOpName',
-                        disabled    : true
-                    },
-                    { 
-                        allowBlank  : false, 
-                        fieldLabel  : 'Operator Password',
-                        labelClsExtra: 'lblRdReq', 
-                        name        : 'dns_ident_op_pwd',
-                        itemId      : 'DnsIdentOpPwd',
-                        disabled    : true
-                    },
-                    {
-                        xtype       : 'numberfield',
-                        name        : 'dns_ident_max_users',
-                        fieldLabel  : 'Number Of Users',
-                        labelClsExtra: 'lblRdReq',
-                        value       : 5,
-                        maxValue    : 100,
-                        minValue    : 1
-                    }
-                ]
             }
         ];
         
@@ -457,6 +399,12 @@ Ext.define('Rd.view.meshes.winMeshEditExit', {
                                 },
                                 tagConnectWith,
                                 {
+                                    xtype       : 'component',
+                                    html        : 'Firewall',
+                                    cls         : 'heading',
+                                    margin      : hMargin,                                   
+                                }, 
+                                {
                                     itemId      : 'chkApplyFirewallProfile',
                                     xtype       : 'checkbox',      
                                     boxLabel  	: 'Apply Firewall Profile',
@@ -474,6 +422,12 @@ Ext.define('Rd.view.meshes.winMeshEditExit', {
                                 	labelClsExtra: 'lblRdReq'                             	
                                 },
                                 {
+                                    xtype       : 'component',
+                                    html        : 'SQM',
+                                    cls         : 'heading',
+                                    margin      : hMargin,
+                                },
+                                {
                                     itemId      : 'chkApplySqmProfile',
                                     xtype       : 'checkbox',      
                                     boxLabel  	: 'Apply SQM Profile',
@@ -489,6 +443,13 @@ Ext.define('Rd.view.meshes.winMeshEditExit', {
                                 	include_all_option : false,
                                 	disabled	: true,
                                 	labelClsExtra: 'lblRd'                             	
+                                },
+                                {
+                                    itemId      : 'chkNetworkStats',
+                                    xtype       : 'checkbox',      
+                                    boxLabel  	: 'Collect Network Stats',
+                                    boxLabelCls	: 'boxLabelRd',
+                                    name        : 'collect_network_stats'
                                 },
                                 {
                                     itemId      : 'cmbOpenVpnServers',

@@ -6,7 +6,7 @@ begin
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'mesh_entry_schedules' and table_schema = 'rd') then
+    where table_name = 'mesh_entry_schedules' and table_schema = DATABASE()) then
     CREATE TABLE `mesh_entry_schedules` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `mesh_entry_id` int(11) DEFAULT NULL,
@@ -27,7 +27,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'ap_profile_entry_schedules' and table_schema = 'rd') then
+    where table_name = 'ap_profile_entry_schedules' and table_schema = DATABASE()) then
 	CREATE TABLE `ap_profile_entry_schedules` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `ap_profile_entry_id` int(11) DEFAULT NULL,

@@ -10,26 +10,15 @@ Ext.define('Rd.view.networkOverview.pnlNetworkOverview', {
         'Rd.view.networkOverview.pnlNetworkOverviewDetail'
     ],
     listeners   : {
-       show        : 'reload',
-       afterrender : 'reload'
+    //   show        : 'reload',
+    //   afterrender : 'reload'
     },
     controller  : 'vcNetworkOverview',
     dockedItems : [   
         {
             xtype   : 'toolbar',
             dock    : 'top',
-            items   : [        
-                {
-                    ui      : 'button-metal', 
-                    glyph   : Rd.config.icnHome, 
-                    scale   : 'small', 
-                    itemId  : 'home', 
-                    tooltip : i18n('sHome'),
-                    listeners       : {
-				        click : 'onBtnHome'
-		            }
-                },
-                '|',
+            items   : [
                 { 
                     xtype       : 'button', 
                     scale       : 'small',
@@ -132,7 +121,7 @@ Ext.define('Rd.view.networkOverview.pnlNetworkOverview', {
             split   : true,
             layout  : 'fit',
             ui      : 'panel-green',
-            title   : 'NAVIGATION',
+            title   : 'QUICK OVERVIEW',
             tools   : [
                 {
                     tooltip : 'Reload Tree',

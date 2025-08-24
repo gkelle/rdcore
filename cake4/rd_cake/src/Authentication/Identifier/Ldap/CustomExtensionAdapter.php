@@ -31,8 +31,14 @@ class CustomExtensionAdapter extends BaseExtensionAdapter {
         $connect_string = $proto.'://'.$host.':'.$port;
         
         $resource = ldap_connect($connect_string);
-        if ($resource === false) {
+               
+        if ($resource === false) {               
             throw new RuntimeException('Unable to connect to LDAP server.');
+        }else{
+            // Set LDAP options (recommended for proper functionality)
+            ldap_set_option($resource, LDAP_OPT_PROTOCOL_VERSION, 3);
+            ldap_set_option($resource, LDAP_OPT_REFERRALS, 0);
+        
         }
       /*  if (isset($options['tls']) && $options['tls']) {
             //convert the connection to TLS

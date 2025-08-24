@@ -1,5 +1,4 @@
 services:
-
   radiusdesk:
     build:
       context: ./
@@ -18,13 +17,13 @@ services:
       - "rdmariadb"
 
     ports:
-      - '80:80'
+      - "80:80"
       - "1812:1812/udp"
       - "1813:1813/udp"
 
   rdmariadb:
     container_name: radiusdesk-mariadb
-    image: docker.io/bitnami/mariadb:10.5
+    image: docker.io/bitnami/mariadb:latest
 
     restart: always
     environment:
@@ -45,4 +44,3 @@ networks:
   default:
     external:
       name: "${RADIUSDESK_NETWORK}"
-

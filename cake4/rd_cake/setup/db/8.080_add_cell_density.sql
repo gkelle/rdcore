@@ -5,7 +5,7 @@ create procedure add_cell_density()
 begin
 
 if not exists (select * from information_schema.columns
-    where column_name = 'cell_density' and table_name = 'hardware_radios' and table_schema = 'rd') then
+    where column_name = 'cell_density' and table_name = 'hardware_radios' and table_schema = DATABASE()) then
     alter table hardware_radios add column `cell_density` enum('0','1','2','3') DEFAULT '0';
 end if;
 

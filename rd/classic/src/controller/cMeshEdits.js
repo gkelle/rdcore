@@ -25,27 +25,27 @@ Ext.define('Rd.controller.cMeshEdits', {
 		'mMeshEntry',  	'mMeshExit', 	'mMeshEntryPoint',  'mNode', 'mRealm','mDynamicDetail', 'mPermanentUser'
     ],
     config      : {  
-        urlAddEntry:        '/cake4/rd_cake/meshes/mesh_entry_add.json',
-        urlViewEntry:       '/cake4/rd_cake/meshes/mesh_entry_view.json',
-        urlEditEntry:       '/cake4/rd_cake/meshes/mesh_entry_edit.json',
+        urlAddEntry:        '/cake4/rd_cake/meshes/mesh-entry-add.json',
+        urlViewEntry:       '/cake4/rd_cake/meshes/mesh-entry-view.json',
+        urlEditEntry:       '/cake4/rd_cake/meshes/mesh-entry-edit.json',
         urlViewMeshSettings:'/cake4/rd_cake/meshes/mesh-settings-view.json',
         urlEditMeshSettings:'/cake4/rd_cake/meshes/mesh-settings-edit.json',
         urlEditMeshGeneral:'/cake4/rd_cake/meshes/mesh-general-edit.json',
-        urlExitAddDefaults :'/cake4/rd_cake/meshes/mesh_exit_add_defaults.json',
-        urlAddExit:         '/cake4/rd_cake/meshes/mesh_exit_add.json',
-        urlEditExit:        '/cake4/rd_cake/meshes/mesh_exit_edit.json',
-        urlViewNodeCommonSettings:'/cake4/rd_cake/meshes/node_common_settings_view.json',
-        urlEditNodeCommonSettings:'/cake4/rd_cake/meshes/node_common_settings_edit.json',
-        urlAddNode:         '/cake4/rd_cake/meshes/mesh_node_add.json',
-        urlViewNode:        '/cake4/rd_cake/meshes/mesh_node_view.json',
-        urlEditNode:        '/cake4/rd_cake/meshes/mesh_node_edit.json',
-		urlMapPrefView		: '/cake4/rd_cake/meshes/map_pref_view.json',
-		urlMapPrefEdit		: '/cake4/rd_cake/meshes/map_pref_edit.json',
-		urlMapSave			: '/cake4/rd_cake/meshes/map_node_save.json',
-		urlMapDelete		: '/cake4/rd_cake/meshes/map_node_delete.json',
-		urlMeshNodes		: '/cake4/rd_cake/meshes/mesh_nodes_index.json',
+        urlExitAddDefaults :'/cake4/rd_cake/meshes/mesh-exit-add_defaults.json',
+        urlAddExit:         '/cake4/rd_cake/meshes/mesh-exit-add.json',
+        urlEditExit:        '/cake4/rd_cake/meshes/mesh-exit-edit.json',
+        urlViewNodeCommonSettings:'/cake4/rd_cake/meshes/node-common-settings-view.json',
+        urlEditNodeCommonSettings:'/cake4/rd_cake/meshes/node-common-settings-edit.json',
+        urlAddNode:         '/cake4/rd_cake/meshes/mesh-node-add.json',
+        urlViewNode:        '/cake4/rd_cake/meshes/mesh-node-view.json',
+        urlEditNode:        '/cake4/rd_cake/meshes/mesh-node-edit.json',
+		urlMapPrefView		: '/cake4/rd_cake/meshes/map-pref-view.json',
+		urlMapPrefEdit		: '/cake4/rd_cake/meshes/map-pref-edit.json',
+		urlMapSave			: '/cake4/rd_cake/meshes/map-node-save.json',
+		urlMapDelete		: '/cake4/rd_cake/meshes/map-node-delete.json',
+		urlMeshNodes		: '/cake4/rd_cake/meshes/mesh-nodes-index.json',
 		urlBlueMark 		: 'resources/images/map_markers/blue-dot.png',
-        urlAdvancedSettingsForModel : '/cake4/rd_cake/meshes/advanced_settings_for_model.json'
+        urlAdvancedSettingsForModel : '/cake4/rd_cake/meshes/advanced-settings-for-model.json'
     },
     refs: [
     	{  ref: 'editEntryWin', 	selector: 'winMeshEditEntry'},
@@ -454,7 +454,7 @@ Ext.define('Rd.controller.cMeshEdits', {
             method  :'GET',
             params  : {mesh_id:meshId},
             success : function(a,b,c){
-            
+                form.down('#displTag').setValue(b.result.data.tag_path);   
             }
         });
     },
@@ -646,6 +646,7 @@ Ext.define('Rd.controller.cMeshEdits', {
         var txtDns1     = win.down('#txtDns1Tagged');
         var txtDns2     = win.down('#txtDns2Tagged');
         var tagConWith  = win.down('tagMeshEntryPoints');
+        var chkStats    = win.down('#chkNetworkStats');
         
         sel_type.setValue(type);
  
@@ -676,9 +677,13 @@ Ext.define('Rd.controller.cMeshEdits', {
         if(type == 'nat'){
             tab_nat.tab.show();
             tab_nat.setDisabled(false);
+            chkStats.show();
+            chkStats.enable();           
         }else{
 	        tab_nat.tab.hide();
             tab_nat.setDisabled(true);
+            chkStats.hide();
+            chkStats.disable();
         }
 
         if(type == 'captive_portal'){

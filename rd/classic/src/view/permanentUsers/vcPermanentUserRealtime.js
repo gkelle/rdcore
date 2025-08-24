@@ -89,7 +89,7 @@ Ext.define('Rd.view.permanentUsers.vcPermanentUserRealtime', {
     },
     doPoll : function(){
         var me      = this;
-        var user    = 'ord2307256401@lintegfibre';
+        var user    = 'ord555@radiusdesk';
         var span    = me.getPollSpan();
         var int     = me.getPollInt();
         Ext.Ajax.request({

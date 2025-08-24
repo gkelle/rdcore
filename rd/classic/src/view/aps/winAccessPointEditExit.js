@@ -20,7 +20,7 @@ Ext.define('Rd.view.aps.winAccessPointEditExit', {
             border: false
     },
     listeners   : {
-		beforeshow  : 'loadExit'
+		afterrender  : 'loadExit'
 	},
     requires: [
         'Ext.tab.Panel',
@@ -38,7 +38,8 @@ Ext.define('Rd.view.aps.winAccessPointEditExit', {
     ],
     controller  : 'vcAccessPointExitPoint',
     initComponent: function() {
-        var me = this;
+        var me      = this;
+        var hMargin = 10;
 
         //Set the combo
         var tagConnectWith = Ext.create('Rd.view.aps.tagAccessPointEntryPoints',{
@@ -205,6 +206,12 @@ Ext.define('Rd.view.aps.winAccessPointEditExit', {
                                 }, 
                                 tagConnectWith,
                                  {
+                                    xtype       : 'component',
+                                    html        : 'Firewall',
+                                    cls         : 'heading',
+                                    margin      : hMargin,                                   
+                                 }, 
+                                 {
                                     itemId      : 'chkApplyFirewallProfile',
                                     xtype       : 'checkbox',      
                                     boxLabel  	: 'Apply Firewall Profile',
@@ -222,6 +229,12 @@ Ext.define('Rd.view.aps.winAccessPointEditExit', {
                                 	labelClsExtra: 'lblRdReq'                             	
                                 },
                                 {
+                                    xtype       : 'component',
+                                    html        : 'SQM',
+                                    cls         : 'heading',
+                                    margin      : hMargin,
+                                },
+                                {
                                     itemId      : 'chkApplySqmProfile',
                                     xtype       : 'checkbox',      
                                     boxLabel  	: 'Apply SQM Profile',
@@ -237,6 +250,13 @@ Ext.define('Rd.view.aps.winAccessPointEditExit', {
                                 	include_all_option : false,
                                 	disabled	: true,
                                 	labelClsExtra: 'lblRd'                             	
+                                },
+                                {
+                                    itemId      : 'chkNetworkStats',
+                                    xtype       : 'checkbox',      
+                                    boxLabel  	: 'Collect Network Stats',
+                                    boxLabelCls	: 'boxLabelRd',
+                                    name        : 'collect_network_stats'
                                 },
                                 {
                                     itemId      : 'chkNasClient',
@@ -450,20 +470,8 @@ Ext.define('Rd.view.aps.winAccessPointEditExit', {
                                                     name        : 'dnsparanoia',
                                                     inputValue  : 'dnsparanoia',
                                                     checked     : false
-                                                },
-                                                {
-                                                    itemId      : 'chkDnsDesk',
-                                                    xtype       : 'checkbox',
-                                                    boxLabelCls	: 'boxLabelRd',      
-                                                    boxLabel 	: 'Use DNSdesk',
-                                                    name        : 'dnsdesk',
-                                                    inputValue  : 'dnsdesk',
-                                                    checked     : false,
-                                                    listeners   : {
-											            change  : 'onChkDnsDeskChange',
-											            beforerender : 'onDnsDeskBeforeRender'
-											        }
                                                 }
+                                                
                                             ]
                                         }, 
                                         {

@@ -5,7 +5,7 @@ create procedure add_realtime_info()
 begin
 
 if not exists (select * from information_schema.columns
-    where table_name = 'mikrotik_pppoe_stats' and table_schema = 'rd') then
+    where table_name = 'mikrotik_pppoe_stats' and table_schema = DATABASE()) then
      CREATE TABLE `mikrotik_pppoe_stats` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `permanent_user_id` int(11) DEFAULT NULL,

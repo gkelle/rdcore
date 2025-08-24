@@ -6,7 +6,7 @@ begin
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'email_histories' and table_schema = 'rd') then
+    where table_name = 'email_histories' and table_schema = DATABASE()) then
 	CREATE TABLE `email_histories` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `cloud_id` int(11) NOT NULL,
@@ -21,7 +21,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'sms_histories' and table_schema = 'rd') then
+    where table_name = 'sms_histories' and table_schema = DATABASE()) then
 	CREATE TABLE `sms_histories` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `cloud_id` int(11) NOT NULL,

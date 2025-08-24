@@ -562,7 +562,9 @@ class ApHelper22Component extends Component {
                 'ap_profile_exit_id' => $exit_id, // With mesh we will make it mesh_exit_id
                 'type'      => $type,
                 'device'    => 'br-'.$if_name,
-                'sqm'       => $ap_profile_e->apply_sqm_profile
+                'sqm'       => $ap_profile_e->apply_sqm_profile,
+                'interface' => $if_name,
+                'stats'     => $ap_profile_e->collect_network_stats,
             ];
                                    
             if($type == 'tagged_bridge_l3'){

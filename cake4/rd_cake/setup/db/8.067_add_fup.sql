@@ -6,7 +6,7 @@ begin
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'profile_fup_components' and table_schema = 'rd') then
+    where table_name = 'profile_fup_components' and table_schema = DATABASE()) then
 	CREATE TABLE `profile_fup_components` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `profile_id` int(11) NOT NULL,
@@ -27,7 +27,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'applied_fup_components' and table_schema = 'rd') then
+    where table_name = 'applied_fup_components' and table_schema = DATABASE()) then
 	CREATE TABLE `applied_fup_components` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `username` varchar(255)  DEFAULT NULL,
@@ -44,5 +44,3 @@ end//
 
 delimiter ;
 call add_fup;
-
-

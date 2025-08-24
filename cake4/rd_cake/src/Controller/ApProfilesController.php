@@ -1149,7 +1149,8 @@ class ApProfilesController extends AppController {
         	$req_d 			= $this->request->getData();
         	$g_check_items 	= [
 				'apply_firewall_profile',
-				'apply_sqm_profile'
+				'apply_sqm_profile',
+				'collect_network_stats'
 			];
 			foreach($g_check_items as $i){
 			   	if(isset($req_d[$i])){

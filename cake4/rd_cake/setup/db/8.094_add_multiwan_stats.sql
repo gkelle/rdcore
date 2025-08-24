@@ -7,7 +7,7 @@ begin
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'wan_traffic_stats' and table_schema = 'rd') then
+    where table_name = 'wan_traffic_stats' and table_schema = DATABASE()) then
 
     CREATE TABLE wan_traffic_stats (
         id int(11) NOT NULL AUTO_INCREMENT,
@@ -36,7 +36,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'wan_lte_stats' and table_schema = 'rd') then
+    where table_name = 'wan_lte_stats' and table_schema = DATABASE()) then
 
      CREATE TABLE wan_lte_stats (
         id int NOT NULL AUTO_INCREMENT,
@@ -59,7 +59,7 @@ end if;
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'wan_wifi_stats' and table_schema = 'rd') then
+    where table_name = 'wan_wifi_stats' and table_schema = DATABASE()) then
 
      CREATE TABLE wan_wifi_stats (
         id int NOT NULL AUTO_INCREMENT,
@@ -85,7 +85,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'wan_mwan3_status' and table_schema = 'rd') then
+    where table_name = 'wan_mwan3_status' and table_schema = DATABASE()) then
      CREATE TABLE wan_mwan3_status (
         id int NOT NULL AUTO_INCREMENT,
         ap_id int DEFAULT NULL,

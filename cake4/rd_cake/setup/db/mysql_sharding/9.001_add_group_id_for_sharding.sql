@@ -5,22 +5,22 @@ create procedure add_group_id_for_sharding()
 begin
 
 if not exists (select * from information_schema.columns
-    where column_name = 'group_id' and table_name = 'radacct' and table_schema = 'rd') then
+    where column_name = 'group_id' and table_name = 'radacct' and table_schema = DATABASE()) then
     alter table radacct add column `group_id` INT NULL;
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'group_id' and table_name = 'radacct_history' and table_schema = 'rd') then
+    where column_name = 'group_id' and table_name = 'radacct_history' and table_schema = DATABASE()) then
     alter table radacct_history add column `group_id` INT NULL;
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'groupname' and table_name = 'user_stats' and table_schema = 'rd') then
+    where column_name = 'groupname' and table_name = 'user_stats' and table_schema = DATABASE()) then
     alter table user_stats add column `groupname` varchar(64) NOT NULL DEFAULT '';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'group_id' and table_name = 'user_stats' and table_schema = 'rd') then
+    where column_name = 'group_id' and table_name = 'user_stats' and table_schema = DATABASE()) then
     alter table user_stats add column `group_id` INT NULL;
 end if;
 

@@ -5,7 +5,7 @@ create procedure add_mac_actions()
 begin
 
 if not exists (select * from information_schema.columns
-    where table_name = 'mac_actions' and table_schema = 'rd') then
+    where table_name = 'mac_actions' and table_schema = DATABASE()) then
     CREATE TABLE `mac_actions` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `cloud_id` int(11) DEFAULT NULL,
@@ -23,7 +23,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'client_macs' and table_schema = 'rd') then
+    where table_name = 'client_macs' and table_schema = DATABASE()) then
 	CREATE TABLE `client_macs` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `mac` varchar(17) DEFAULT NULL,

@@ -4,7 +4,16 @@ $config = [];
 $config['RbaNas'] = [
     'admin'     => ['*'],
     'view'      => [
-        
+        'testMikrotik',
+        'exportCsv',
+        'index',
+        'add',
+        'view',
+        'edit',
+        //'delete',
+               
+        //Buttons
+        'btnGraph'        
     ],
     'granular'  => [
         'testMikrotik',

@@ -18,7 +18,8 @@ Ext.define('Rd.controller.cUtilities', {
         'alerts.gridAlerts',
         'softflows.pnlSoftflows',
         'testRadius.pnlTestRadius',
-        'qrcode.pnlQrcode'
+        'qrcode.pnlQrcode',
+        'radstats.pnlRadstats'
     ],
     stores: [],
     models: [],
@@ -60,6 +61,9 @@ Ext.define('Rd.controller.cUtilities', {
 			},
 			'pnlUtilities #btnQrcode' : {
 				click 	: me.openQrcode
+			},
+			'pnlUtilities #btnRadstats' : {
+				click 	: me.openRadstats
 			},
         });
     },
@@ -175,7 +179,7 @@ Ext.define('Rd.controller.cUtilities', {
         });
         tp.setActiveTab('pnlTestRadius');
     },
-     openQrcode: function(btn){
+    openQrcode: function(btn){
         var me  = this;
         var pnl = me.getPnlUtilities();
         var tp  = pnl.up('tabpanel');
@@ -196,5 +200,26 @@ Ext.define('Rd.controller.cUtilities', {
 	        }         
         });
         tp.setActiveTab('pnlQrcode');
+    },
+    openRadstats: function(btn){
+        var me  = this;
+        var pnl = me.getPnlUtilities();
+        var tp  = pnl.up('tabpanel');
+        var check_if_there = tp.down('#pnlRadstats');     
+        if(check_if_there){
+            tp.setActiveTab('pnlRadstats');
+            return;
+        }     
+        tp.add({
+             title   : 'RADIUS Stats',
+             closable: true,
+             xtype   : 'pnlRadstats',
+             glyph   : Rd.config.icnGraph,
+             itemId  : 'pnlRadstats',
+	         tabConfig   : {
+	            ui : 'tab-brown'
+	        }         
+        });
+        tp.setActiveTab('pnlRadstats');
     }
 });

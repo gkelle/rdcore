@@ -32,9 +32,7 @@ begin
         -- Alter the password column to VARCHAR(255)
         ALTER TABLE permanent_users
         MODIFY COLUMN password VARCHAR(255);
-    END IF;
-    
-    
+    END IF;   
 
 end//
 

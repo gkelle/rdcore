@@ -6,7 +6,7 @@ begin
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'home_server_pools' and table_schema = 'rd') then
+    where table_name = 'home_server_pools' and table_schema = DATABASE()) then
      CREATE TABLE `home_server_pools` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `name` varchar(255) NOT NULL,
@@ -20,7 +20,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'home_servers' and table_schema = 'rd') then
+    where table_name = 'home_servers' and table_schema = DATABASE()) then
      CREATE TABLE `home_servers` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `type` enum('auth','acct','auth+acct','coa') DEFAULT 'auth+acct',

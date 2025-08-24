@@ -6,10 +6,10 @@ $config['RbaProfiles'] = [
     'view'      => [
         'indexAp',
         'index',
-        //'manageComponents'
+        'manageComponents',
         //'delete',
-        //'simpleAdd',
-        //'simpleEdit',
+        'simpleAdd',
+        'simpleEdit',
         'simpleView',
         'fupView',
         //'fupEdit',

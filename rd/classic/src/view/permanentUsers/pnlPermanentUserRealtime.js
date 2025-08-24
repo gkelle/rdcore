@@ -228,7 +228,7 @@ Ext.define('Rd.view.permanentUsers.pnlPermanentUserRealtime', {
                         ),
                         data: {
                             ".id": "*F00000",
-                            "name": "&lt;pppoe-ord2307256401@lintegfibre&gt;",
+                            "name": "&lt;pppoe-555@radiusdesk&gt;",
                             "type": "pppoe-in",
                             "mtu": "1480",
                             "actual_mtu": "1480",

@@ -5,7 +5,7 @@ create procedure add_dynamic_client_nas_settings()
 begin
 
 if not exists (select * from information_schema.columns
-    where table_name = 'dynamic_client_settings' and table_schema = 'rd') then
+    where table_name = 'dynamic_client_settings' and table_schema = DATABASE()) then
 	CREATE TABLE `dynamic_client_settings` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `dynamic_client_id` int(11) NOT NULL,
@@ -19,7 +19,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'na_settings' and table_schema = 'rd') then
+    where table_name = 'na_settings' and table_schema = DATABASE()) then
 	CREATE TABLE `na_settings` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `na_id` int(11) NOT NULL,

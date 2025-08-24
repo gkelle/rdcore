@@ -5,7 +5,7 @@ create procedure add_isp_specifics()
 begin
 
 if not exists (select * from information_schema.columns
-    where table_name = 'isp_specifics' and table_schema = 'rd') then
+    where table_name = 'isp_specifics' and table_schema = DATABASE()) then
     CREATE TABLE `isp_specifics` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `cloud_id` int(11) DEFAULT NULL,

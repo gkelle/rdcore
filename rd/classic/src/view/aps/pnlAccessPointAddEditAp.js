@@ -40,7 +40,7 @@ Ext.define('Rd.view.aps.pnlAccessPointAddEditAp', {
     ],
     controller  : 'vcApGeneric',
     listeners       : {
-        show : 'loadBasicSettings' //Trigger a load of the settings
+    //    show : 'loadBasicSettings' //Trigger a load of the settings
     },
     initComponent: function() {
          var me 	= this; 
@@ -549,8 +549,7 @@ Ext.define('Rd.view.aps.pnlAccessPointAddEditAp', {
                 }       
             ]
         };
-        
-        
+                
         var pnlWifiEnt = {
             xtype   : 'panel',
             itemId  : 'pnlWifiEnt',

@@ -33,52 +33,13 @@ Ext.define('Rd.view.aps.vcAccessPointExitPoint', {
 		var form    = chk.up('form');
 		var d1      = form.down('#txtDns1');
 		var d2      = form.down('#txtDns2');
-		var desk    = form.down('#chkDnsDesk');
 		if(chk.getValue()){
 		    d1.enable();
 		    d2.enable();
-		    desk.setValue(false);
-		    desk.disable(); 
 		}else{
 		    d1.disable();
 		    d2.disable();
-		    desk.enable(); 
 		}
-	},
-	onChkDnsDeskChange: function(chk){
-	    var me 		= this;
-		var form    = chk.up('form');
-		var override= form.down('#chkDnsOverride');
-		var any     = form.down('#chkAnyDns');
-		if(chk.getValue()){
-		    any.setValue(false);
-		    any.disable();
-		    override.setValue(false);
-		    override.disable();  
-		}else{
-		    any.enable();
-		    override.enable();  
-		}
-	},
-	onDnsDeskBeforeRender : function(chk){
-	    var me = this; 
-	    Ext.Ajax.request({
-            url: me.getUrlCheckExperimental(),
-            method: 'GET',
-            success: function(response){
-                var jsonData    = Ext.JSON.decode(response.responseText);
-                if(jsonData.success){                      
-                    if(jsonData.active){
-                        chk.show();
-                        chk.enable();  
-                    }else{
-                        chk.hide();
-                        chk.disable(); 
-                    }
-                }   
-            },
-            scope: me
-        });
 	},
 	onRgrpProtocolChange : function(grp){
 	    var me          = this; 
@@ -95,6 +56,7 @@ Ext.define('Rd.view.aps.vcAccessPointExitPoint', {
 	loadExit: function(win){
         var me      = this; 
         var form    = win.down('form');
+        form.setLoading(true);
         var exitId = win.exitId;
         form.load({
             url         :me.getUrlViewExit(), 
@@ -112,6 +74,7 @@ Ext.define('Rd.view.aps.vcAccessPointExitPoint', {
                 
                 var l3Detail    = form.down('#pnlLayer3Detail');
                 var tagConWith  = form.down('tagAccessPointEntryPoints');
+                var chkStats    = form.down('#chkNetworkStats');
                 
                 if(t_val == 'openvpn_bridge'){
                     vpn.setVisible(true);
@@ -144,6 +107,16 @@ Ext.define('Rd.view.aps.vcAccessPointExitPoint', {
                     vlan.setVisible(false);
                     vlan.setDisabled(true);
                 }
+                
+                if(t_val == 'nat'){
+                    chkStats.show();
+                    chkStats.enable();           
+                }else{
+                    chkStats.hide();
+                    chkStats.disable();
+                }
+                
+                
                 var ent  = form.down("tagAccessPointEntryPoints");
                 ent.setValue(b.result.data.entry_points);
                 if(b.result.data.type == 'captive_portal'){
@@ -200,7 +173,9 @@ Ext.define('Rd.view.aps.vcAccessPointExitPoint', {
                     
                     tagConWith.setVisible(true);
                     tagConWith.setDisabled(false);
-                }    
+                }
+                
+                form.setLoading(false);    
             }
         });
     }

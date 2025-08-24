@@ -5,17 +5,17 @@ create procedure add_ppsk_field()
 begin
 
 if not exists (select * from information_schema.columns
-    where column_name = 'ppsk' and table_name = 'permanent_users' and table_schema = 'rd') then
+    where column_name = 'ppsk' and table_name = 'permanent_users' and table_schema = DATABASE()) then
     alter table permanent_users add column `ppsk` varchar(100) NOT NULL DEFAULT '';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'realm_vlan_id' and table_name = 'permanent_users' and table_schema = 'rd') then
+    where column_name = 'realm_vlan_id' and table_name = 'permanent_users' and table_schema = DATABASE()) then
     alter table permanent_users add column `realm_vlan_id` int(11) DEFAULT NULL;
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'realm_vlans' and table_schema = 'rd') then
+    where table_name = 'realm_vlans' and table_schema = DATABASE()) then
 	CREATE TABLE `realm_vlans` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `realm_id` int(11) NOT NULL,
@@ -30,7 +30,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'realm_ssids' and table_schema = 'rd') then
+    where table_name = 'realm_ssids' and table_schema = DATABASE()) then
 	CREATE TABLE `realm_ssids` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `realm_id` int(11) NOT NULL,
@@ -47,7 +47,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'realm_pmks' and table_schema = 'rd') then
+    where table_name = 'realm_pmks' and table_schema = DATABASE()) then
 	CREATE TABLE `realm_pmks` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `realm_id` int(11) NOT NULL,
@@ -62,7 +62,7 @@ end if;
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'realm_mac_users' and table_schema = 'rd') then
+    where table_name = 'realm_mac_users' and table_schema = DATABASE()) then
 	CREATE TABLE `realm_mac_users` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `realm_id` int(11) NOT NULL,
@@ -76,17 +76,17 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'realm_id' and table_name = 'ap_profile_entries' and table_schema = 'rd') then
+    where column_name = 'realm_id' and table_name = 'ap_profile_entries' and table_schema = DATABASE()) then
     alter table ap_profile_entries add column `realm_id` int(11) DEFAULT NULL;
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'realm_id' and table_name = 'mesh_entries' and table_schema = 'rd') then
+    where column_name = 'realm_id' and table_name = 'mesh_entries' and table_schema = DATABASE()) then
     alter table mesh_entries add column `realm_id` int(11) DEFAULT NULL;
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'operator_name' and table_name = 'radacct' and table_schema = 'rd') then
+    where column_name = 'operator_name' and table_name = 'radacct' and table_schema = DATABASE()) then
     alter table radacct add column `operator_name` varchar(32) NOT NULL DEFAULT '';
 end if;
 

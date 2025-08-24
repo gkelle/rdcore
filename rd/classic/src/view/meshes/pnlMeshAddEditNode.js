@@ -37,7 +37,7 @@ Ext.define('Rd.view.meshes.pnlMeshAddEditNode', {
     ],
     controller  : 'vcMeshNodeGeneric',
     listeners       : {
-        show : 'loadBasicSettings' //Trigger a load of the settings (This is only on the initial load)
+    //    show : 'loadBasicSettings' //Trigger a load of the settings (This is only on the initial load)
     },
     initComponent: function() {
          var me 	        = this;     
@@ -46,12 +46,10 @@ Ext.define('Rd.view.meshes.pnlMeshAddEditNode', {
          var hide_multiple  = true;          
 		// Are we creating a new one or editing an existing one?
 		var saveItemId = (me.nodeId == 0) ? 'addsave' : 'editsave';
-
 		var cmb = Ext.create('Rd.view.components.cmbMesh',
 	        { 
 	            itemId          : 'mesh_id',
 	            width           : w_prim,
-
 	            listeners       : {
                         change : 'onCmbMeshChange'
                 }  

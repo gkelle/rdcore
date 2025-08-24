@@ -2,8 +2,7 @@ Ext.define('Rd.view.meshes.vcMeshExitPoint', {
     extend  : 'Ext.app.ViewController',
     alias   : 'controller.vcMeshExitPoint',
     config : {
-        urlCheckExperimental : '/cake4/rd_cake/meshes/mesh_experimental_check.json',
-        urlViewExit:        '/cake4/rd_cake/meshes/mesh_exit_view.json',
+        urlViewExit : '/cake4/rd_cake/meshes/mesh_exit_view.json',
     },
     init: function() {
         var me = this;
@@ -27,76 +26,18 @@ Ext.define('Rd.view.meshes.vcMeshExitPoint', {
 		}else{
 		    sqm_prof.disable();
 		}
-	},       
-    onAfterRender: function(window){
-   
-        var me          = this;    
-        var chk         = window.down('#chkDnsDesk');
-        var tabDns      = chk.up('#tabDns');
-	    var fsDnsIdent  = tabDns.down('#fsDnsIdent');   
-	    Ext.Ajax.request({
-            url: me.getUrlCheckExperimental(),
-            method: 'GET',
-            success: function(response){
-                var jsonData = Ext.JSON.decode(response.responseText);
-                if(jsonData.success){                      
-                    if(jsonData.active){
-                        chk.show();
-                        chk.enable(); 
-                        fsDnsIdent.hide();
-                        fsDnsIdent.disable();    
-                    }else{
-                        chk.hide();
-                        chk.disable();
-                    }
-                }   
-            },
-            scope: me
-        });
-    },   
+	},
 	onChkDnsOverrideChange: function(chk){
 		var me 		= this;
 		var form    = chk.up('form');
 		var d1      = form.down('#txtDns1');
 		var d2      = form.down('#txtDns2');
-		var desk    = form.down('#chkDnsDesk');
 		if(chk.getValue()){
 		    d1.enable();
 		    d2.enable();
-		    desk.setValue(false);
-		    desk.disable(); 
 		}else{
 		    d1.disable();
 		    d2.disable();
-		    desk.enable(); 
-		}
-	},
-	onChkDnsDeskChange: function(chk){
-	    var me 		= this;
-		var form    = chk.up('form');
-		var override= form.down('#chkDnsOverride');
-		var any     = form.down('#chkAnyDns');
-		var tabDns  = chk.up('#tabDns');
-	    var fsDnsIdent = tabDns.down('#fsDnsIdent'); 
-		
-		if(chk.getValue()){
-		    any.setValue(false);
-		    any.disable();
-		    override.setValue(false);
-		    override.disable();
-		    fsDnsIdent.show();
-            fsDnsIdent.enable();
-            tabDns.down('#DnsIdentIp').enable(); 
-            tabDns.down('#DnsIdentOpName').enable(); 
-            tabDns.down('#DnsIdentOpPwd').enable(); 
-		}else{
-		    any.enable();
-		    override.enable();
-		    fsDnsIdent.hide();
-            fsDnsIdent.disable();
-            tabDns.down('#DnsIdentIp').disable();
-            tabDns.down('#DnsIdentOpName').disable();
-            tabDns.down('#DnsIdentOpPwd').disable();   
 		}
 	},
 	onRgrpProtocolChange : function(grp){
@@ -146,6 +87,7 @@ Ext.define('Rd.view.meshes.vcMeshExitPoint', {
         var me      = this; 
         var form    = win.down('form');
         var exitId = win.exitId;
+        form.setLoading(true);
         form.load({
             url         :me.getUrlViewExit(), 
             method      :'GET',
@@ -166,6 +108,7 @@ Ext.define('Rd.view.meshes.vcMeshExitPoint', {
                 var txtDns1Tagged       = form.down('#txtDns1Tagged');
                 var txtDns2Tagged       = form.down('#txtDns2Tagged');
                 var tagConWith          = form.down('tagMeshEntryPoints'); 
+                var chkStats    = form.down('#chkNetworkStats');
                 
                 if(t_val == 'openvpn_bridge'){
                     vpn.setVisible(true);
@@ -203,6 +146,15 @@ Ext.define('Rd.view.meshes.vcMeshExitPoint', {
                     vlan.setVisible(false);
                     vlan.setDisabled(true);
                 }
+                
+                if(t_val == 'nat'){
+                    chkStats.show();
+                    chkStats.enable();           
+                }else{
+                    chkStats.hide();
+                    chkStats.disable();
+                }
+                              
                 var ent  = form.down("tagMeshEntryPoints");
                 ent.setValue(b.result.data.entry_points);
                 if(b.result.data.type == 'captive_portal'){
@@ -269,7 +221,9 @@ Ext.define('Rd.view.meshes.vcMeshExitPoint', {
                     
                     tagConWith.setVisible(true);
                     tagConWith.setDisabled(false);
-                }      
+                }
+                
+                form.setLoading(false);      
             }
         });
     } 

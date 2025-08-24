@@ -25,6 +25,9 @@ $start_time = microtime(true);
 //Statements
 //Uptime Histories
 
+//MAC Cache
+$__mac_cache = [];
+
 doConnection();
 
 //Node Uptimes
@@ -215,6 +218,12 @@ function _doReports(){
         if (!empty($report['sqm'])) {
             _do_sqm_stats($report['sqm'], 'ap');
         }
+        
+        //--nlbwmon stats--
+        if (!empty($report['nlbw'])) {
+            _do_nlbw_stats_ap($report['nlbw']['data'], $ap_id );
+        }
+        
 
         // Prepare AP updates
         $stmt_update_ap->execute([
@@ -899,19 +908,86 @@ function _do_sqm_stats($sqm_stats, $type = 'ap'){
     $not_these = ['id','type','device','sqm'];  
     if($type == 'ap'){
 	    foreach($sqm_stats as $stat){ 
-	    print_r($stat);	    
+	        print_r($stat);	    
             foreach($not_these as $remove){
-                unset($stat[$remove]);
-	    }
-	    if(isset($stat['memory_used'])){ 
+                    unset($stat[$remove]);
+	        }
+	        if(isset($stat['memory_used'])){ 
+
+		        // Turn on exceptions so you see exactly what's missing
+                $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+                $required = [
+                    'ap_id','ap_profile_exit_id','bytes','packets','drops','overlimits',
+                    'backlog','qlen','memory_used','peak_delay_us','avg_delay_us',
+                    'base_delay_us','way_misses','way_indirect_hits'
+                ];
+
+                // $row is your input array from print_r(...)
+                $params = [];
+                foreach ($required as $k) {
+                    // default to 0 if missing to avoid "missing parameter" error
+                    $params[$k] = isset($row[$k]) ? (int)$row[$k] : 0;
+                }
+
+                $stmt = $conn->prepare("
+                    INSERT INTO ap_sqm_stats (
+                        ap_id, ap_profile_exit_id, bytes, packets, drops, overlimits,
+                        backlog, qlen, memory_used, peak_delay_us, avg_delay_us,
+                        base_delay_us, way_misses, way_indirect_hits, created, modified
+                    ) VALUES (
+                        :ap_id, :ap_profile_exit_id, :bytes, :packets, :drops, :overlimits,
+                        :backlog, :qlen, :memory_used, :peak_delay_us, :avg_delay_us,
+                        :base_delay_us, :way_misses, :way_indirect_hits, NOW(), NOW()
+                    )
+                ");
+
+                $stmt->execute($params);
       	       print_r($stat);	    
-               $stmt   = $conn->prepare("INSERT into ap_sqm_stats (ap_id,ap_profile_exit_id,bytes,packets,drops,overlimits,backlog,qlen,memory_used,peak_delay_us,avg_delay_us,base_delay_us,way_misses,way_indirect_hits,created,modified)VALUES(:ap_id,:ap_profile_exit_id,:bytes,:packets,:drops,:overlimits,:backlog,:qlen,:memory_used,:peak_delay_us,:avg_delay_us,:base_delay_us,:way_misses,:way_indirect_hits,NOW(),NOW())");
-               $stmt->execute($stat);
-	   }       
+//               $stmt   = $conn->prepare("INSERT into ap_sqm_stats (ap_id,ap_profile_exit_id,bytes,packets,drops,overlimits,backlog,qlen,memory_used,peak_delay_us,avg_delay_us,base_delay_us,way_misses,way_indirect_hits,created,modified)VALUES(:ap_id,:ap_profile_exit_id,:bytes,:packets,:drops,:overlimits,:backlog,:qlen,:memory_used,:peak_delay_us,:avg_delay_us,:base_delay_us,:way_misses,:way_indirect_hits,NOW(),NOW())");
+//               $stmt->execute($stat);
+	        }       
         }      
     }
 }
 
+
+function _do_nlbw_stats_ap($data,$ip_id){
+
+    global $conn;
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    //['family','proto','port','mac','ip','conns','rx_bytes','rx_pkts','tx_bytes','tx_pkts','layer7','l3if','l3dev','exit_id','exit_type']    
+    $result = array_map(fn($r) => _row_to_assoc($r), $data);
+
+    foreach($result as $d){
+        print_r($d);
+        $stmt = $conn->prepare("
+            INSERT INTO nlbw_stats_ap (
+                family, proto, port, mac, ip, conns,
+                rx_bytes, rx_pkts, tx_bytes, tx_pkts, layer7,
+                l3if, l3dev, exit_id, exit_type
+            ) VALUES (
+                :family, :proto, :port, :mac, :ip, :conns,
+                :rx_bytes, :rx_pkts, :tx_bytes, :tx_pkts, :layer7,
+                :l3if, :l3dev, :exit_id, :exit_type
+            )
+        ");
+                
+        //$stmt->debugDumpParams();      
+        $stmt->execute($d);      
+    }    
+}
+
+function _row_to_assoc(array $row): array {
+    $keys = ['family','proto','port','mac','ip','conns','rx_bytes','rx_pkts','tx_bytes','tx_pkts','layer7','l3if','l3dev','exit_id','exit_type'];
+    // Trim or pad so counts match
+    $row = array_slice($row, 0, count($keys));
+    if (count($row) < count($keys)) {
+        $row = array_pad($row, count($keys), null);
+    }
+    return array_combine($keys, $row);
+}
 
 
 //FIXME Ensure that the Firmware also includes a 'DISTRIB_BUILD' in the release file    
@@ -1000,6 +1076,29 @@ function logger($message){
     }
 }
 
+
+function getOrCreateMacAddressId(string $mac): int {
+    global $conn, $__mac_cache;
+    $mac = strtolower(str_replace('-', ':', $mac));
+    if (isset($__mac_cache[$mac])) {
+        return $__mac_cache[$mac];
+    }
+    $sql = "
+        INSERT INTO mac_addresses (mac, created, modified)
+        VALUES (:mac, NOW(), NOW())
+        ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), modified = VALUES(modified)
+    ";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([':mac' => $mac]);
+    $id = (int)$conn->lastInsertId();
+    if ($id === 0) {
+        $id = (int)$conn->query("SELECT id FROM mac_addresses WHERE mac=".$conn->quote($mac))->fetchColumn();
+    }
+    return $__mac_cache[$mac] = $id;
+}
+
+
+/*
 function getOrCreateMacAddressId($mac) {
     global $conn;
 
@@ -1018,6 +1117,7 @@ function getOrCreateMacAddressId($mac) {
     // Return existing MAC address ID
     return $existingMac['id'];
 }
+*/
 
 function detectPhy($prefix, $s_data) {
     if (!empty($s_data["{$prefix}_eht"])) return 'eht';

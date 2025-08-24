@@ -26,7 +26,7 @@ Ext.define('Rd.view.meshes.tagStaticEntries', {
                     messageProperty: 'message'
                 }
             },
-            autoLoad: true
+            autoLoad: false
         });
         me.store = s;
         me.callParent(arguments);

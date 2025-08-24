@@ -5,15 +5,15 @@ create procedure add_radacct_triggers()
 begin
 
     if not exists (select * from information_schema.columns
-        where column_name = 'created' and table_name = 'user_stats' and table_schema = 'rd') then
+        where column_name = 'created' and table_name = 'user_stats' and table_schema = DATABASE()) then
         ALTER TABLE user_stats ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     end if;
 
-    IF NOT EXISTS (SELECT 1 FROM information_schema.statistics WHERE table_schema = 'rd' AND table_name = 'user_stats' AND index_name = 'idx_radacct_id') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'user_stats' AND index_name = 'idx_radacct_id') THEN
         CREATE INDEX idx_radacct_id ON user_stats (radacct_id);
     END IF;
 
-    IF NOT EXISTS (SELECT 1 FROM information_schema.statistics WHERE table_schema = 'rd' AND table_name = 'user_stats' AND index_name = 'idx_radacct_timestamp') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'user_stats' AND index_name = 'idx_radacct_timestamp') THEN
         CREATE INDEX idx_radacct_timestamp ON user_stats (radacct_id, timestamp);
     END IF;
 

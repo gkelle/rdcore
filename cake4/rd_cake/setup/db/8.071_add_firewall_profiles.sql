@@ -6,7 +6,7 @@ begin
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'firewall_profiles' and table_schema = 'rd') then
+    where table_name = 'firewall_profiles' and table_schema = DATABASE()) then
 
         CREATE TABLE `firewall_profiles` (
           `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -20,7 +20,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'firewall_profile_entries' and table_schema = 'rd') then
+    where table_name = 'firewall_profile_entries' and table_schema = DATABASE()) then
 	
     CREATE TABLE `firewall_profile_entries` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -50,7 +50,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'firewall_apps' and table_schema = 'rd') then	
+    where table_name = 'firewall_apps' and table_schema = DATABASE()) then	
     CREATE TABLE `firewall_apps` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `name` char(16) DEFAULT NULL,
@@ -66,7 +66,7 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'firewall_profile_entry_firewall_apps' and table_schema = 'rd') then
+    where table_name = 'firewall_profile_entry_firewall_apps' and table_schema = DATABASE()) then
     CREATE TABLE `firewall_profile_entry_firewall_apps` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `firewall_profile_entry_id` int(11) NOT NULL,
@@ -79,13 +79,13 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'apply_firewall_profile' and table_name = 'ap_profile_exits' and table_schema = 'rd') then
+    where column_name = 'apply_firewall_profile' and table_name = 'ap_profile_exits' and table_schema = DATABASE()) then
     alter table ap_profile_exits add column `apply_firewall_profile` tinyint(1) NOT NULL DEFAULT 0;
     alter table ap_profile_exits add column `firewall_profile_id` int(11) NOT NULL DEFAULT '0';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'apply_firewall_profile' and table_name = 'mesh_exits' and table_schema = 'rd') then
+    where column_name = 'apply_firewall_profile' and table_name = 'mesh_exits' and table_schema = DATABASE()) then
     alter table mesh_exits add column `apply_firewall_profile` tinyint(1) NOT NULL DEFAULT 0;
     alter table mesh_exits add column `firewall_profile_id` int(11) NOT NULL DEFAULT '0';
 end if;
@@ -93,7 +93,7 @@ end if;
 alter table mac_actions modify `action` enum('block','limit','firewall') DEFAULT 'block';
 
 if not exists (select * from information_schema.columns
-    where column_name = 'firewall_profile_id' and table_name = 'mac_actions' and table_schema = 'rd') then
+    where column_name = 'firewall_profile_id' and table_name = 'mac_actions' and table_schema = DATABASE()) then
     alter table mac_actions add column `firewall_profile_id` int(11) DEFAULT NULL;
 end if;
 

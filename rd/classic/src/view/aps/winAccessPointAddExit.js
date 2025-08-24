@@ -52,6 +52,8 @@ Ext.define('Rd.view.aps.winAccessPointAddExit', {
     mkScrnType: function(){
 
         var me      = this;
+        
+        
         var buttons = [
              
                 {
@@ -183,6 +185,7 @@ Ext.define('Rd.view.aps.winAccessPointAddExit', {
     mkScrnData: function(){
 
         var me      = this;
+        var hMargin = 10;
 
         //Set the combo
         var tagConnectWith = Ext.create('Rd.view.aps.tagAccessPointEntryPoints',{
@@ -295,7 +298,7 @@ Ext.define('Rd.view.aps.winAccessPointAddExit', {
                     xtype   : 'tabpanel',
                     layout  : 'fit',
                     xtype   : 'tabpanel',
-                    margins : '0 0 0 0',
+                 //   margins : '0 0 0 0',
                     plain   : false,
                     tabPosition: 'bottom',
                     border  : false,
@@ -339,6 +342,13 @@ Ext.define('Rd.view.aps.winAccessPointAddExit', {
                                     mouseWheelEnabled	: false
                                 },
                                 tagConnectWith,
+                                 {
+                                    xtype       : 'component',
+                                    html        : 'Firewall',
+                                    cls         : 'heading',
+                                    margin      : hMargin,
+                                    
+                                },  
                                 {
                                     itemId      : 'chkApplyFirewallProfile',
                                     xtype       : 'checkbox',      
@@ -357,6 +367,12 @@ Ext.define('Rd.view.aps.winAccessPointAddExit', {
                                 	labelClsExtra: 'lblRd'                             	
                                 },
                                 {
+                                    xtype       : 'component',
+                                    html        : 'SQM',
+                                    cls         : 'heading',
+                                    margin      : hMargin,
+                                },  
+                                {
                                     itemId      : 'chkApplySqmProfile',
                                     xtype       : 'checkbox',      
                                     boxLabel  	: 'Apply SQM Profile',
@@ -372,6 +388,13 @@ Ext.define('Rd.view.aps.winAccessPointAddExit', {
                                 	include_all_option : false,
                                 	disabled	: true,
                                 	labelClsExtra: 'lblRd'                             	
+                                },
+                                {
+                                    itemId      : 'chkNetworkStats',
+                                    xtype       : 'checkbox',      
+                                    boxLabel  	: 'Collect Network Stats',
+                                    boxLabelCls	: 'boxLabelRd',
+                                    name        : 'collect_network_stats'
                                 },
                                 {
                                     itemId      : 'chkNasClient',

@@ -5,7 +5,7 @@ create procedure add_sqm_profiles()
 begin
 
 if not exists (select * from information_schema.columns
-    where table_name = 'sqm_profiles' and table_schema = 'rd') then
+    where table_name = 'sqm_profiles' and table_schema = DATABASE()) then
      CREATE TABLE `sqm_profiles` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `name` varchar(255) NOT NULL,
@@ -40,19 +40,19 @@ if not exists (select * from information_schema.columns
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'apply_sqm_profile' and table_name = 'ap_profile_exits' and table_schema = 'rd') then
+    where column_name = 'apply_sqm_profile' and table_name = 'ap_profile_exits' and table_schema = DATABASE()) then
     alter table ap_profile_exits add column `apply_sqm_profile` tinyint(1) NOT NULL DEFAULT 0;
     alter table ap_profile_exits add column `sqm_profile_id` int(11) NOT NULL DEFAULT '0';
 end if;
 
 if not exists (select * from information_schema.columns
-    where column_name = 'apply_sqm_profile' and table_name = 'mesh_exits' and table_schema = 'rd') then
+    where column_name = 'apply_sqm_profile' and table_name = 'mesh_exits' and table_schema = DATABASE()) then
     alter table mesh_exits add column `apply_sqm_profile` tinyint(1) NOT NULL DEFAULT 0;
     alter table mesh_exits add column `sqm_profile_id` int(11) NOT NULL DEFAULT '0';
 end if;
 
 if not exists (select * from information_schema.columns
-    where table_name = 'ap_sqm_stats' and table_schema = 'rd') then
+    where table_name = 'ap_sqm_stats' and table_schema = DATABASE()) then
      CREATE TABLE `ap_sqm_stats` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `ap_id` int(11) DEFAULT NULL,
@@ -78,7 +78,7 @@ end if;
 
 
 if not exists (select * from information_schema.columns
-    where table_name = 'node_sqm_stats' and table_schema = 'rd') then
+    where table_name = 'node_sqm_stats' and table_schema = DATABASE()) then
      CREATE TABLE `node_sqm_stats` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `node_id` int(11) DEFAULT NULL,

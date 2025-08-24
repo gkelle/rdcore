@@ -6,7 +6,7 @@ begin
 
 
 if not exists (select * from information_schema.columns
-    where column_name = 'type' and table_name = 'dynamic_clients' and table_schema = 'rd') then
+    where column_name = 'type' and table_name = 'dynamic_clients' and table_schema = DATABASE()) then
     alter table dynamic_clients add column `type` varchar(30) NULL DEFAULT 'other';
 end if;
 

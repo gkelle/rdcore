@@ -8,7 +8,7 @@ Ext.define('Rd.view.networkOverview.vcNetworkOverview', {
     },
     control: {
         'treeNetworkOverview': {
-           // select      : 'onTreeNodeSelect',
+          //  select      : 'onTreeNodeSelect',
             itemclick   : 'onTreeNodeClick' //FIXME Might cause double call 
         },
         '#pnlMeshes' : {
@@ -18,6 +18,7 @@ Ext.define('Rd.view.networkOverview.vcNetworkOverview', {
             render  : 'pnlApsRender'
         }
     },
+    
     //FROM treeNetworkOverview
     onTreeNodeSelect: function(tree,record,index){
         var me  = this;  
@@ -28,16 +29,10 @@ Ext.define('Rd.view.networkOverview.vcNetworkOverview', {
         var me  = this;  
         me.setNodeId(record.id);
         me.reload();
-    },      
-    onBtnHome: function(button){
-        var me = this;
-        me.setNodeId(0);
-        me.reload();
-        me.getView().down('treeNetworkOverview').collapseAll();
     },
     onBtnReload: function(button){
-        var me = this;
-        me.getView().down('treeNetworkOverview').getStore().reload();
+        var me = this;       
+        me.getView().down('treeNetworkOverview').getStore().load();
     },   
     onClickNowButton: function(button){
         var me = this;  

@@ -304,7 +304,7 @@ class ApReportsController extends AppController {
                         ];
                         	      	                		                	
 	                	$dead_after = $this->_get_dead_after($q_ap->ap_profile_id);	                	
-	                	$latestInfo = $this->_getLatsetApInfo($ap_id,$q_ap->ap_profile_id,$mac_address_id,$dead_after);                             
+	                	$latestInfo = $this->_getLatestApInfo($ap_id,$q_ap->ap_profile_id,$mac_address_id,$dead_after);                             
                         $basic      = (array_merge($basic,$latestInfo));
                         $mActions   = $this->_getMacActions($cloud_id,$q_ap->ap_profile_id,$mac_address_id);
                         $basic      = (array_merge($basic,$mActions));            
@@ -404,6 +404,7 @@ class ApReportsController extends AppController {
                     ->contain(['MacAddresses'])
                     ->where([
                         'ApStations.ap_profile_entry_id'=> $apProfileEntryId,
+                        'ApStations.ap_id'              => $ap_id,
                         'ApStations.modified >='        => $modified
                     ])->all();
                
@@ -424,7 +425,8 @@ class ApReportsController extends AppController {
                         ->contain(['MacAddresses'])
                         ->where([
                             'ApStationHourlies.ap_profile_entry_id' => $apProfileEntryId,
-                            'ApStationHourlies.modified >='   => $modified
+                            'ApStationHourlies.ap_id'               => $ap_id,
+                            'ApStationHourlies.modified >='         => $modified
                         ])->all();
                     foreach($apStationHourlies as $apStationHourly){
                         $mac_id = $apStationHourly->mac_address_id;
@@ -510,7 +512,7 @@ class ApReportsController extends AppController {
                         ];
                         	      	                		                	
 	                	$dead_after = $this->_get_dead_after($q_ap->ap_profile_id);	                	
-	                	$latestInfo = $this->_getLatsetApInfo($ap_id,$q_ap->ap_profile_id,$mac_address_id,$dead_after);                             
+	                	$latestInfo = $this->_getLatestApInfo($ap_id,$q_ap->ap_profile_id,$mac_address_id,$dead_after);                             
                         $basic      = (array_merge($basic,$latestInfo));
                         $mActions   = $this->_getMacActions($cloud_id,$q_ap->ap_profile_id,$mac_address_id);
                         $basic      = (array_merge($basic,$mActions));            
@@ -831,7 +833,9 @@ class ApReportsController extends AppController {
     }
     //---- END ACTIONS RELATED ----
     
-    private function _getLatsetApInfo($apId,$ap_profile_id,$macAddressId,$dead_after){
+    private function _getLatestApInfo($apId,$ap_profile_id,$macAddressId,$dead_after){
+    
+        
     
          //Get the latest entry
         $lastCreated = $this->ApStations->find()->where([
@@ -845,11 +849,19 @@ class ApReportsController extends AppController {
             $lastCreated = $this->ApStationHourlies->find()->where([
                 'mac_address_id'    => $macAddressId,
                 'ap_id'             => $apId
-            ])->order(['created'   => 'desc'])->first();     
+            ])->order(['created'   => 'desc'])->first(); 
+            
+         //   print_r('=====');
+        //    print_r($macAddressId);
+        //    print_r('++++');
+            
+            if(!$lastCreated){
+                return [];
+            }   
         }
-        
+                      
         if($historical){
-            $signal = $lastCreated->signal_avg;
+            $signal = $lastCreated->signal_avg;           
         }else{
             $signal = $lastCreated->signal_now;
         }      

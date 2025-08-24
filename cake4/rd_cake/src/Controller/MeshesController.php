@@ -1253,7 +1253,8 @@ class MeshesController extends AppController{
         	$check_items = [
 				'auto_detect',
 				'apply_firewall_profile',
-				'apply_sqm_profile'
+				'apply_sqm_profile',
+				'collect_network_stats'
 			];
 		    foreach($check_items as $i){
 		        if(isset($req_d[$i])){

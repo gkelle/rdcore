@@ -663,7 +663,9 @@ class MeshHelper22Component extends Component {
                 'mesh_exit_id' => $exit_id, // With mesh we will make it mesh_exit_id
                 'type'      => $type,
                 'device'    => 'br-'.$if_name,
-                'sqm'       => $me->apply_sqm_profile
+                'sqm'       => $me->apply_sqm_profile,
+                'interface' => $if_name,
+                'stats'     => $me->collect_network_stats,
             ];
                                     
             if($type == 'tagged_bridge_l3'){

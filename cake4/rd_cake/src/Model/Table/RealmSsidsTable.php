@@ -8,6 +8,8 @@ use Cake\ORM\TableRegistry;
 
 class RealmSsidsTable extends Table{
 
+    public $RealmPmks;
+
     public function initialize(array $config):void{
         $this->addBehavior('Timestamp');  
         $this->belongsTo('Realms');
